@@ -12,13 +12,7 @@ import hashlib
 import time
 import urllib.request
 import os
-import io
-import tempfile
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')
-from fpdf import FPDF
-from PIL import Image
+from collections import deque
 
 # ========== إعدادات الصفحة ==========
 st.set_page_config(page_title="رادار عادل للخيارات الكمية", layout="wide")
@@ -27,6 +21,21 @@ st.set_page_config(page_title="رادار عادل للخيارات الكمية
 CREDENTIALS = {
     "admin": "198200",
     "moha33": "tickmillx33"
+}
+
+# ========== أسماء الأدوات ==========
+METRICS_LABELS = {
+    "Open Interest": "📊 مركز السيولة (Open Interest)",
+    "Gamma Exposure": "⚡ قوة الدفع (Gamma Exposure)",
+    "Gamma Gold": "⚡ قوة الدفع الذهبية (Gamma Gold)",
+    "Delta Exposure": "📌 دلتا (Delta Exposure)",
+    "Vanna Exposure": "🌊 تأثير التقلب (Vanna Exposure)",
+    "Vega Exposure": "📈 فيغا (Vega Exposure)",
+    "Theta Exposure": "⏳ ثيتا (Theta Exposure)",
+    "Charm Exposure (x10k)": "🕰️ سحر الدلتا (Charm Exposure ×10k)",
+    "Speed Exposure (x10k)": "🚀 سرعة غاما (Speed Exposure ×10k)",
+    "Implied Volatility": "😰 مؤشر القلق (Implied Volatility)",
+    "IV Skew": "📉 انحراف التقلب (IV Skew)",
 }
 
 # ========== نظام تتبع الزوار ==========
@@ -117,23 +126,6 @@ def display_visitor_widget():
 def login_page():
     st.markdown("""
         <style>
-            .login-container {
-                max-width: 400px;
-                margin: 5% auto;
-                padding: 40px;
-                background-color: #1e1e1e;
-                border-radius: 15px;
-                border: 1px solid #333;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-                text-align: center;
-            }
-            .login-title {
-                text-align: center;
-                margin-bottom: 30px;
-                font-size: 28px;
-                font-weight: bold;
-                color: #00d4ff;
-            }
             .stTextInput {
                 text-align: center;
             }
@@ -146,21 +138,25 @@ def login_page():
                 max-width: 300px;
                 margin: 0 auto;
             }
+            .login-title {
+                text-align: center;
+                margin-bottom: 30px;
+                font-size: 28px;
+                font-weight: bold;
+                color: #00d4ff;
+            }
         </style>
     """, unsafe_allow_html=True)
 
-    with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown('<div class="login-container">', unsafe_allow_html=True)
-            st.markdown('<div class="login-title">🔐 رادار عادل للخيارات الكمية</div>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown('<div class="login-title">🔐 رادار عادل للخيارات الكمية</div>', unsafe_allow_html=True)
+        
+        with st.form(key="login_form", clear_on_submit=False):
+            username = st.text_input("👩‍🏫 اسم المستخدم", placeholder="👩‍🏫 أدخل اسم المستخدم", key="login_username")
+            password = st.text_input("🔑 كلمة المرور", placeholder="🔑 أدخل كلمة المرور", type="password", key="login_password")
             
-            username = st.text_input("👤 اسم المستخدم", placeholder="أدخل اسم المستخدم", key="login_username")
-            password = st.text_input("🔑 كلمة المرور", placeholder="أدخل كلمة المرور", type="password", key="login_password")
-            
-            col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-            with col_btn2:
-                login_btn = st.button("🚀 دخول", use_container_width=True)
+            login_btn = st.form_submit_button("🚀 دخول", use_container_width=True)
             
             if login_btn:
                 if username in CREDENTIALS and CREDENTIALS[username] == password:
@@ -171,23 +167,41 @@ def login_page():
                     st.rerun()
                 else:
                     st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة.")
-            
-            st.markdown('</div>', unsafe_allow_html=True)
 
-# ========== دالة التحقق من فتح السوق ==========
-def is_market_open():
+# ========== دوال التحقق من حالة السوق ==========
+def get_market_status():
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     ny_tz = zoneinfo.ZoneInfo("America/New_York")
     now_ny = now_utc.astimezone(ny_tz)
     
     if now_ny.weekday() >= 5:
-        return False
+        return "closed", now_ny
     
     current_time = now_ny.time()
     open_time = datetime.time(9, 30)
     close_time = datetime.time(16, 0)
     
-    return open_time <= current_time <= close_time
+    if open_time <= current_time <= close_time:
+        return "open", now_ny
+    else:
+        return "closed", now_ny
+
+def should_autorefresh():
+    status, now_ny = get_market_status()
+    if status == "closed":
+        target_time = datetime.time(8, 30)
+        current_time = now_ny.time()
+        if current_time <= target_time:
+            return True
+        else:
+            return False
+    else:
+        target_time = datetime.time(15, 0)
+        current_time = now_ny.time()
+        if current_time >= target_time:
+            return False
+        else:
+            return True
 
 # ========== دوال بلاك-شولز ==========
 def d1(S, K, T, r, sigma, q=0.0):
@@ -247,11 +261,42 @@ def speed(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
     return -g * (d1_val / (sigma * np.sqrt(T)) + 1) / S
 
+# ========== GEX History ==========
+class GEXHistory:
+    def __init__(self, max_minutes=60):
+        self.max_minutes = max_minutes
+        self.history = deque(maxlen=max_minutes)
+        self.last_timestamp = None
+    
+    def add(self, net_gex, timestamp=None):
+        if timestamp is None:
+            timestamp = datetime.datetime.now()
+        self.history.append((timestamp, net_gex))
+        self.last_timestamp = timestamp
+    
+    def get_60min_ago(self):
+        if len(self.history) < 2:
+            return None
+        now = datetime.datetime.now()
+        target_time = now - datetime.timedelta(minutes=60)
+        for ts, val in self.history:
+            if ts <= target_time:
+                return val
+        return self.history[0][1] if self.history else None
+    
+    def get_current(self):
+        return self.history[-1][1] if self.history else None
+
+if 'gex_history' not in st.session_state:
+    st.session_state.gex_history = GEXHistory(max_minutes=120)
+
 # ========== جلب البيانات ==========
 @st.cache_data(ttl=120)
 def fetch_options_data(symbol, expiration_date=None):
     if symbol == "SPX":
         symbol = "^SPX"
+    elif symbol == "NDX":
+        symbol = "^NDX"
     
     ticker = yf.Ticker(symbol)
     hist = ticker.history(period="1d")
@@ -291,13 +336,90 @@ def fetch_options_data(symbol, expiration_date=None):
     T = max((exp_date_dt - now).days / 365.0, 2/365.0)
     return current_price, expiration_date, df, T
 
+# ========== حساب IV Skew ==========
+def calculate_iv_skew(df, S, settings):
+    call_pct = settings.get('iv_skew_call_pct', 1.15)
+    put_pct = settings.get('iv_skew_put_pct', 0.85)
+    
+    call_target = S * call_pct
+    put_target = S * put_pct
+    
+    strikes = df['strike'].values
+    call_idx = np.argmin(np.abs(strikes - call_target))
+    put_idx = np.argmin(np.abs(strikes - put_target))
+    
+    call_iv = df.iloc[call_idx].get('impliedVolatility_call', 0.001)
+    put_iv = df.iloc[put_idx].get('impliedVolatility_put', 0.001)
+    
+    call_iv = max(call_iv, 0.001)
+    put_iv = max(put_iv, 0.001)
+    
+    skew = call_iv - put_iv
+    return skew, call_iv, put_iv, df.iloc[call_idx]['strike'], df.iloc[put_idx]['strike']
+
+# ========== حساب صفر غاما ==========
+def calculate_zero_gamma(df, S):
+    if 'net_gamma' in df.columns:
+        net_gamma_vals = df['net_gamma'].values
+    else:
+        strikes = df['strike'].values
+        net_gamma_vals = []
+        for i, strike in enumerate(strikes):
+            gamma_est = np.exp(-0.5 * ((strike - S) / (S * 0.05))**2) / (S * 0.05 * np.sqrt(2 * np.pi))
+            net_gamma_vals.append(gamma_est)
+    
+    strikes = df['strike'].values
+    
+    for i in range(1, len(net_gamma_vals)):
+        if net_gamma_vals[i-1] * net_gamma_vals[i] < 0:
+            zero_level = (strikes[i-1] + strikes[i]) / 2
+            return zero_level, net_gamma_vals
+    
+    return S, net_gamma_vals
+
+# ========== حساب مناطق التقاء غاما وفانا ==========
+def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
+    threshold = settings.get('confluence_pct', 0.30)
+    
+    zones = []
+    for idx, row in df.iterrows():
+        strike = row['strike']
+        gamma_val = row.get('net_gamma', 0)
+        vanna_val = row.get('net_vanna', 0) if 'net_vanna' in row else row.get('call_vanna', 0) + row.get('put_vanna', 0)
+        
+        gamma_norm = gamma_val / max_gamma if max_gamma != 0 else 0
+        vanna_norm = vanna_val / max_vanna if max_vanna != 0 else 0
+        
+        if gamma_norm > threshold and vanna_norm > threshold and strike > S:
+            zones.append({
+                'strike': strike,
+                'type': 'squeeze',
+                'gamma_norm': gamma_norm,
+                'vanna_norm': vanna_norm,
+                'color': 'limegreen'
+            })
+        
+        if gamma_norm < -threshold and vanna_norm < -threshold and strike < S:
+            zones.append({
+                'strike': strike,
+                'type': 'meltdown',
+                'gamma_norm': gamma_norm,
+                'vanna_norm': vanna_norm,
+                'color': 'red'
+            })
+    
+    return zones
+
 # ========== دوال الرسم ==========
 def plot_metric_single(df, S, call_col, put_col, title, y_axis, 
-                       call_color='limegreen', put_color='crimson', x_range=None):
+                       call_color='limegreen', put_color='crimson', x_range=None,
+                       zero_gamma_level=None, zones=None, gex_flow=None,
+                       show_gamma_line=False, gamma_line_data=None):
     fig = go.Figure()
+    
     fig.add_trace(go.Bar(x=df['strike'], y=df[call_col], marker_color=call_color, name='Calls', legendgroup='calls'))
     fig.add_trace(go.Bar(x=df['strike'], y=df[put_col], marker_color=put_color, name='Puts', legendgroup='puts'))
-    fig.update_layout(barmode='stack')
+    fig.update_layout(barmode='relative')
 
     if x_range is None:
         min_s = df['strike'].min()
@@ -314,9 +436,45 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
                   annotation_text=f"S = {S:.1f}",
                   annotation_position="top",
                   annotation_font=dict(color="white", size=12))
+    
+    if zero_gamma_level is not None:
+        fig.add_vline(x=zero_gamma_level, line_dash="dash", line_color="white",
+                      annotation_text="Zero-Gamma",
+                      annotation_position="bottom",
+                      annotation_font=dict(color="white", size=10))
+    
+    if zones:
+        for zone in zones:
+            color = zone['color']
+            marker = '💥' if zone['type'] == 'squeeze' else '⬇️'
+            fig.add_vline(x=zone['strike'], line_dash="dot", line_color=color,
+                          annotation_text=f"{marker} {zone['type'].upper()}",
+                          annotation_position="top",
+                          annotation_font=dict(color=color, size=10))
+    
+    if gex_flow is not None:
+        fig.add_annotation(
+            x=0.95, y=0.95,
+            xref="paper", yref="paper",
+            text=f"GEX Flow: {gex_flow:+.0f}",
+            showarrow=False,
+            font=dict(color="limegreen" if gex_flow > 0 else "crimson", size=14),
+            bgcolor="rgba(0,0,0,0.7)",
+            borderpad=4
+        )
+    
+    if show_gamma_line and gamma_line_data is not None:
+        fig.add_trace(go.Scatter(
+            x=df['strike'],
+            y=gamma_line_data,
+            mode='lines',
+            line=dict(color='cyan', width=2, dash='dash'),
+            name='Gamma Exposure'
+        ))
 
+    display_title = METRICS_LABELS.get(title, title)
     fig.update_layout(
-        title=title,
+        title=display_title,
         yaxis_title=y_axis,
         xaxis_title="Strike Price",
         font=dict(color="white"),
@@ -330,29 +488,88 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
     fig.update_yaxes(gridcolor='gray')
     return fig
 
-def plot_cumulative_line(df, S, x_col, y_col, title, y_axis, line_color='deepskyblue'):
+def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
+    fig = go.Figure()
+    
+    if skew_history:
+        fig.add_trace(go.Scatter(
+            x=list(range(len(skew_history))),
+            y=skew_history,
+            mode='lines',
+            line=dict(color='cyan', width=2),
+            name='IV Skew'
+        ))
+    
+    if sma_history:
+        fig.add_trace(go.Scatter(
+            x=list(range(len(sma_history))),
+            y=sma_history,
+            mode='lines',
+            line=dict(color='orange', width=2, dash='dash'),
+            name='SMA 20'
+        ))
+    
+    color = 'yellow' if abs(deviation) > 0.20 else 'white'
+    fig.add_annotation(
+        x=0.5, y=0.95,
+        xref="paper", yref="paper",
+        text=f"Skew: {current_skew:.4f} | SMA: {sma_value:.4f} | Dev: {deviation:.2%}",
+        showarrow=False,
+        font=dict(color=color, size=12),
+        bgcolor="rgba(0,0,0,0.6)",
+        borderpad=4
+    )
+    
+    fig.update_layout(
+        title="📉 انحراف التقلب (IV Skew)",
+        yaxis_title="IV Spread",
+        xaxis_title="الوقت",
+        font=dict(color="white"),
+        plot_bgcolor="#111",
+        paper_bgcolor="#222",
+        margin=dict(l=10, r=10, t=40, b=40)
+    )
+    fig.update_xaxes(gridcolor='gray')
+    fig.update_yaxes(gridcolor='gray')
+    return fig
+
+def plot_ratio_line(df, S, x_col, y_col, title, y_axis, line_color='magenta'):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=df[x_col], y=df[y_col],
-        mode='lines', fill='tozeroy', line=dict(color=line_color, width=2),
+        mode='lines+markers',
+        line=dict(color=line_color, width=2),
+        marker=dict(size=6),
+        name='Gamma / OI Ratio'
+    ))
+    fig.add_vline(x=S, line_dash="dash", line_color="white",
+                  annotation_text=f"S = {S:.1f}", annotation_position="top right",
+                  annotation_font=dict(color="white"))
+    fig.update_layout(
+        title=title,
+        yaxis_title=y_axis,
+        xaxis_title="Strike Price",
+        font=dict(color="white"),
+        plot_bgcolor="#111",
+        paper_bgcolor="#222",
+        hovermode="x unified",
+        margin=dict(l=10, r=10, t=40, b=40)
+    )
+    fig.update_xaxes(gridcolor='gray')
+    fig.update_yaxes(gridcolor='gray')
+    return fig
+
+def plot_cumulative_delta(df, S, x_col, y_col, title, y_axis, line_color='deepskyblue'):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df[x_col], y=df[y_col],
+        mode='lines', fill='tozeroy',
+        line=dict(color=line_color, width=2),
         name='Net Delta'
     ))
-    
     fig.add_vline(x=S, line_dash="dash", line_color="white",
-                  annotation_text=f"S = {S:.1f}",
-                  annotation_position="top",
-                  annotation_font=dict(color="white", size=12))
-    
-    min_s = df[x_col].min()
-    max_s = df[x_col].max()
-    if S < min_s:
-        min_s = S - (max_s - min_s) * 0.15
-    elif S > max_s:
-        max_s = S + (max_s - min_s) * 0.15
-    center = S
-    half_range = max(center - min_s, max_s - center) * 1.2
-    x_range = (center - half_range, center + half_range)
-    
+                  annotation_text=f"S = {S:.1f}", annotation_position="top right",
+                  annotation_font=dict(color="white"))
     fig.update_layout(
         title=title,
         yaxis_title=y_axis,
@@ -362,16 +579,14 @@ def plot_cumulative_line(df, S, x_col, y_col, title, y_axis, line_color='deepsky
         paper_bgcolor="#222",
         hovermode="x unified",
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=10, r=10, t=40, b=40)
     )
-    fig.update_xaxes(gridcolor='gray', range=x_range)
+    fig.update_xaxes(gridcolor='gray')
     fig.update_yaxes(gridcolor='gray')
     return fig
 
 # ========== صفحة تاريخ واحد ==========
 def single_date_page(symbol):
-    # عرض التاريخ تحت العنوان مباشرة
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     st.header("تحليل تاريخ انتهاء واحد")
     st.caption(f"📅 {today}")
@@ -384,9 +599,36 @@ def single_date_page(symbol):
     S = current_price
     q = 0.0
 
+    # ===== إعدادات المستخدم =====
     with st.sidebar:
         st.markdown("## ⚙️ الإعدادات")
         r = st.slider("سعر الفائدة الخالي من المخاطر (r)", 0.0, 0.2, 0.05, 0.005)
+        
+        st.divider()
+        st.markdown("### 🎯 إعدادات متقدمة")
+        
+        iv_call_pct = st.slider("IV Call نسبة السعر (%)", 1.05, 1.30, 1.15, 0.01, key="iv_call_pct")
+        iv_put_pct = st.slider("IV Put نسبة السعر (%)", 0.70, 0.95, 0.85, 0.01, key="iv_put_pct")
+        sma_period = st.slider("فترة SMA لـ IV Skew", 5, 50, 20, 1, key="sma_period")
+        dev_threshold = st.slider("عتبة انحراف IV Skew (%)", 0.05, 0.50, 0.20, 0.01, key="dev_threshold")
+        
+        st.divider()
+        
+        confluence_pct = st.slider(
+            "نسبة التقاء غاما/فانا (%)",
+            0.10, 0.60, 0.30, 0.01,
+            key="confluence_pct",
+            help="النسبة المئوية من Max_Gamma و Max_Vanna لتحديد مناطق Squeeze و Meltdown"
+        )
+        
+        st.divider()
+        
+        taha_confluence_pct = st.slider(
+            "نسبة التقاء غاما/فانا لـ 🧑‍🏫 طه (%)",
+            0.10, 0.60, 0.30, 0.01,
+            key="taha_confluence_pct",
+            help="النسبة المئوية من Max_Gamma و Max_Vanna لتحديد مناطق Squeeze و Meltdown في مؤشر طه"
+        )
         
         st.divider()
         
@@ -400,7 +642,8 @@ def single_date_page(symbol):
                 st.rerun()
 
         if current_price is not None:
-            market_status = "🟢 مفتوح" if is_market_open() else "🔴 مغلق"
+            status, _ = get_market_status()
+            market_status = "🟢 مفتوح" if status == "open" else "🔴 مغلق"
             st.metric("💰 السعر الحالي", f"${current_price:.2f}", delta=market_status)
             st.markdown(f"**📅 تاريخ الانتهاء:** `{expiration_date}`")
             st.caption(f"🕒 آخر تحديث: {datetime.datetime.now().strftime('%I:%M:%S %p')}") 
@@ -417,6 +660,15 @@ def single_date_page(symbol):
             step=5
         )
         st.caption("قم بتفعيل '🔒' أسفل كل رسم بياني لتثبيت النطاق.")
+
+    settings = {
+        'iv_skew_call_pct': iv_call_pct,
+        'iv_skew_put_pct': iv_put_pct,
+        'iv_sma_period': sma_period,
+        'iv_deviation_threshold': dev_threshold,
+        'confluence_pct': confluence_pct,
+        'taha_confluence_pct': taha_confluence_pct,
+    }
 
     df_filtered = df[(df['strike'] >= strike_range[0]) & (df['strike'] <= strike_range[1])].copy()
     df_sorted = df_filtered.sort_values('strike').reset_index(drop=True)
@@ -446,9 +698,14 @@ def single_date_page(symbol):
     df_sorted['call_delta'] = oi_c * delta_c
     df_sorted['put_delta'] = oi_p * delta_p
     df_sorted['call_gamma'] = oi_c * gamma_val
-    df_sorted['put_gamma'] = oi_p * gamma_val
+    df_sorted['put_gamma'] = oi_p * gamma_val * -1
+    df_sorted['call_gamma_gold'] = oi_c * gamma_val * 1.2
+    df_sorted['put_gamma_gold'] = oi_p * gamma_val * -1.2
     df_sorted['call_vanna'] = oi_c * vanna_val
     df_sorted['put_vanna'] = oi_p * vanna_val
+    # تم حذف Vanna Gold
+    df_sorted['openInterest_call_display'] = oi_c
+    df_sorted['openInterest_put_display'] = oi_p * -1
     df_sorted['call_vega'] = oi_c * vega_val
     df_sorted['put_vega'] = oi_p * vega_val
     df_sorted['call_theta'] = oi_c * theta_c
@@ -457,16 +714,137 @@ def single_date_page(symbol):
     df_sorted['put_charm'] = oi_p * charm_p * SCALE
     df_sorted['call_speed'] = oi_c * speed_val * SCALE
     df_sorted['put_speed'] = oi_p * speed_val * SCALE
+    
+    df_sorted['net_gamma'] = df_sorted['call_gamma'] + df_sorted['put_gamma']
+    df_sorted['net_vanna'] = df_sorted['call_vanna'] + df_sorted['put_vanna']
 
     df_sorted['total_gamma'] = df_sorted['call_gamma'] + df_sorted['put_gamma']
     df_sorted['total_oi'] = df_sorted['openInterest_call'] + df_sorted['openInterest_put']
     df_sorted['gamma_ratio'] = df_sorted['total_gamma'] / (df_sorted['total_oi'] + 1)
 
+    # ===== IV Skew =====
+    skew_value, call_iv, put_iv, call_strike, put_strike = calculate_iv_skew(df_sorted, S, settings)
+    
+    if 'iv_skew_history' not in st.session_state:
+        st.session_state.iv_skew_history = deque(maxlen=settings['iv_sma_period'] + 10)
+    
+    st.session_state.iv_skew_history.append(skew_value)
+    skew_history = list(st.session_state.iv_skew_history)
+    
+    sma_period = settings['iv_sma_period']
+    if len(skew_history) >= sma_period:
+        sma_value = np.mean(skew_history[-sma_period:])
+        sma_history = []
+        for i in range(sma_period, len(skew_history) + 1):
+            sma_history.append(np.mean(skew_history[i-sma_period:i]))
+    else:
+        sma_value = np.mean(skew_history) if skew_history else 0
+        sma_history = []
+    
+    deviation = (skew_value - sma_value) / sma_value if sma_value != 0 else 0
+
+    # ===== Zero-Gamma =====
+    zero_gamma_level, net_gamma_vals = calculate_zero_gamma(df_sorted, S)
+    distance_to_zero_gamma = S - zero_gamma_level
+    setup_signal = "🟢 Bullish Setup" if S > zero_gamma_level else "🔴 Bearish Setup"
+
+    # ===== Confluence Zones =====
+    max_gamma = max(abs(df_sorted['net_gamma'].max()), abs(df_sorted['net_gamma'].min())) if 'net_gamma' in df_sorted else 1
+    max_vanna = max(abs(df_sorted['net_vanna'].max()), abs(df_sorted['net_vanna'].min())) if 'net_vanna' in df_sorted else 1
+    
+    zones = calculate_confluence_zones(df_sorted, S, max_gamma, max_vanna, settings)
+
+    # ===== GEX Flow =====
+    current_net_gex = df_sorted['net_gamma'].sum()
+    st.session_state.gex_history.add(current_net_gex)
+    
+    gex_60min_ago = st.session_state.gex_history.get_60min_ago()
+    gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
+
+    # =================================================================
+    # ===== 1. Zero-Gamma =====
+    # =================================================================
+
+    st.divider()
+    st.subheader("🎯 مؤشرات صفر غاما (Zero-Gamma) - خاصة بـ Gamma Gold")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("📍 مستوى صفر غاما", f"${zero_gamma_level:.2f}")
+    with col2:
+        st.metric("📏 المسافة من السعر", f"${distance_to_zero_gamma:.2f}", 
+                  delta=f"{distance_to_zero_gamma:.2f}")
+    with col3:
+        st.metric("📈 الإشارة", setup_signal)
+    with col4:
+        st.metric("🌊 تدفق غاما (GEX Flow)", f"{gex_flow:+.0f}",
+                  delta=f"{gex_flow:+.0f}", 
+                  delta_color="normal")
+
+    # =================================================================
+    # ===== 2. Confluence Zones (العناصر المنفصلة) =====
+    # =================================================================
+
+    if zones:
+        st.divider()
+        st.subheader("📍 مناطق التقاء غاما وفانا (Confluence Zones) - خاصة بـ Gamma Gold")
+        
+        squeeze_zones = [z for z in zones if z['type'] == 'squeeze']
+        meltdown_zones = [z for z in zones if z['type'] == 'meltdown']
+        
+        if squeeze_zones:
+            st.success(f"💥 Squeeze Zones (صاعد) عند: {', '.join([f'${z['strike']:.2f}' for z in squeeze_zones])}")
+        if meltdown_zones:
+            st.error(f"⬇️ Meltdown Zones (هابط) عند: {', '.join([f'${z['strike']:.2f}' for z in meltdown_zones])}")
+        
+        for zone in zones:
+            if zone['type'] == 'squeeze' and S <= zero_gamma_level:
+                st.warning(f"⚠️ Squeeze عند ${zone['strike']:.2f} غير مفعّل (السعر تحت صفر غاما)")
+            if zone['type'] == 'meltdown' and S >= zero_gamma_level:
+                st.warning(f"⚠️ Meltdown عند ${zone['strike']:.2f} غير مفعّل (السعر فوق صفر غاما)")
+
+    # =================================================================
+    # ===== 3. IV Skew =====
+    # =================================================================
+
+    st.divider()
+    st.subheader("📉 مؤشر انحراف التقلب (IV Skew)")
+
+    fig_skew = plot_iv_skew(skew_history, sma_history, skew_value, sma_value, deviation)
+    st.plotly_chart(fig_skew, use_container_width=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("📊 IV Skew الحالي", f"{skew_value:.4f}")
+    with col2:
+        st.metric("📈 SMA 20", f"{sma_value:.4f}")
+    with col3:
+        deviation_pct = deviation * 100
+        st.metric("📉 الانحراف عن SMA", f"{deviation_pct:.2f}%",
+                  delta=f"{deviation_pct:.2f}%",
+                  delta_color="inverse" if abs(deviation) > 0.20 else "off")
+    with col4:
+        st.metric("🎯 حالة الانحراف", "⚠️ غير طبيعي" if abs(deviation) > 0.20 else "✅ طبيعي")
+
+    with st.expander("📊 تفاصيل IV Skew"):
+        st.write(f"**سعر التنفيذ لـ Call ({settings['iv_skew_call_pct']:.0%}):** ${call_strike:.2f} - IV: {call_iv:.4f}")
+        st.write(f"**سعر التنفيذ لـ Put ({settings['iv_skew_put_pct']:.0%}):** ${put_strike:.2f} - IV: {put_iv:.4f}")
+        st.write(f"**الفرق (Skew):** {skew_value:.4f}")
+        st.write(f"**SMA {settings['iv_sma_period']}:** {sma_value:.4f}")
+        st.write(f"**الانحراف:** {deviation:.2%}")
+        st.write(f"**الحالة:** {'⚠️ غير طبيعي' if abs(deviation) > 0.20 else '✅ طبيعي'}")
+
+    # =================================================================
+    # ===== 4. المؤشرات الأساسية =====
+    # =================================================================
+
     metrics = [
-        ('openInterest_call', 'openInterest_put', 'Open Interest', 'Contracts'),
+        ('openInterest_call_display', 'openInterest_put_display', 'Open Interest', 'Contracts'),
         ('call_gamma', 'put_gamma', 'Gamma Exposure', 'Gamma Exposure'),
+        ('call_gamma_gold', 'put_gamma_gold', 'Gamma Gold', 'Gamma Exposure'),
         ('call_delta', 'put_delta', 'Delta Exposure', 'Delta Exposure'),
         ('call_vanna', 'put_vanna', 'Vanna Exposure', 'Vanna Exposure'),
+        # تم حذف Vanna Gold
         ('call_vega', 'put_vega', 'Vega Exposure', 'Vega Exposure'),
         ('call_theta', 'put_theta', 'Theta Exposure', 'Theta Exposure'),
         ('call_charm', 'put_charm', 'Charm Exposure (x10k)', 'Charm (x10k)'),
@@ -478,8 +856,27 @@ def single_date_page(symbol):
     
     for call_col, put_col, title, yaxis in metrics:
         x_range = st.session_state.get(f"xrange_{title}", None)
-        fig = plot_metric_single(df_sorted, S, call_col, put_col, title, yaxis, 
-                                 x_range=x_range)
+        
+        # ===== إعادة المناطق إلى Gamma Gold =====
+        if title == "Gamma Gold":
+            zero_gamma = zero_gamma_level
+            zones_list = zones  # تم تمرير المناطق إلى Gamma Gold
+            gex_flow_val = gex_flow
+        else:
+            zero_gamma = None
+            zones_list = None
+            gex_flow_val = None
+        
+        # ===== إزالة Vanna Gold (لم يعد هناك show_gamma) =====
+        fig = plot_metric_single(
+            df_sorted, S, call_col, put_col, title, yaxis, 
+            x_range=x_range,
+            zero_gamma_level=zero_gamma,
+            zones=zones_list,
+            gex_flow=gex_flow_val,
+            show_gamma_line=False,
+            gamma_line_data=None
+        )
 
         col_plot, col_freeze = st.columns([0.96, 0.04])
         with col_plot:
@@ -490,61 +887,52 @@ def single_date_page(symbol):
             if frozen:
                 any_frozen = True
 
-    # ---- الدلتا التراكمي ----
+    # =================================================================
+    # ===== 5. المؤشرات الإضافية =====
+    # =================================================================
+
+    fig_ratio = plot_ratio_line(
+        df_sorted, S,
+        x_col='strike',
+        y_col='gamma_ratio',
+        title='Gamma / Open Interest Ratio',
+        y_axis='Gamma per Contract',
+        line_color='magenta'
+    )
+    st.plotly_chart(fig_ratio, use_container_width=True)
+
     df_sorted['net_delta'] = df_sorted['call_delta'] - df_sorted['put_delta']
     df_sorted['cumulative_delta'] = df_sorted['net_delta'].cumsum()
 
-    fig_cum = plot_cumulative_line(
-        df_sorted, S,
-        x_col='strike',
-        y_col='cumulative_delta',
-        title='Cumulative Delta Exposure',
-        y_axis='Cumulative Net Delta',
-        line_color='deepskyblue'
-    )
-    st.plotly_chart(fig_cum, use_container_width=True, key="chart_cumulative_delta")
+    if "show_cum_delta" not in st.session_state:
+        st.session_state.show_cum_delta = False
 
-    # ---- نسبة Gamma/Open Interest ----
-    fig_ratio = go.Figure()
-    fig_ratio.add_trace(go.Scatter(
-        x=df_sorted['strike'], 
-        y=df_sorted['gamma_ratio'],
-        mode='lines+markers', 
-        line=dict(color='magenta', width=2),
-        marker=dict(size=6),
-        name='Gamma / OI Ratio'
-    ))
-    
-    fig_ratio.add_vline(x=S, line_dash="dash", line_color="white",
-                        annotation_text=f"S = {S:.1f}",
-                        annotation_position="top",
-                        annotation_font=dict(color="white", size=12))
-    
-    min_s = df_sorted['strike'].min()
-    max_s = df_sorted['strike'].max()
-    if S < min_s:
-        min_s = S - (max_s - min_s) * 0.15
-    elif S > max_s:
-        max_s = S + (max_s - min_s) * 0.15
-    center = S
-    half_range = max(center - min_s, max_s - center) * 1.2
-    x_range_ratio = (center - half_range, center + half_range)
-    
-    fig_ratio.update_layout(
-        title='Gamma / Open Interest Ratio',
-        yaxis_title='Gamma per Contract',
-        xaxis_title='Strike Price',
-        font=dict(color="white"),
-        plot_bgcolor="#111",
-        paper_bgcolor="#222",
-        hovermode="x unified",
-        margin=dict(l=10, r=10, t=40, b=40)
-    )
-    fig_ratio.update_xaxes(gridcolor='gray', range=x_range_ratio)
-    fig_ratio.update_yaxes(gridcolor='gray')
-    st.plotly_chart(fig_ratio, use_container_width=True)
+    col_btn, col_title = st.columns([0.15, 0.85])
+    with col_btn:
+        label = "🔽 إخفاء" if st.session_state.show_cum_delta else "▶️ إظهار"
+        if st.button(label, key="toggle_cum_delta", help="إظهار أو إخفاء مؤشر الدلتا التراكمي"):
+            st.session_state.show_cum_delta = not st.session_state.show_cum_delta
+            st.rerun()
+    with col_title:
+        st.write("### 📊 الدلتا التراكمي (Cumulative Delta Exposure)")
 
-    # ========== إضافة Inventory ==========
+    if st.session_state.show_cum_delta:
+        fig_cum = plot_cumulative_delta(
+            df_sorted, S,
+            x_col='strike',
+            y_col='cumulative_delta',
+            title='Cumulative Delta Exposure',
+            y_axis='Cumulative Net Delta',
+            line_color='deepskyblue'
+        )
+        st.plotly_chart(fig_cum, use_container_width=True)
+    else:
+        st.caption("🔒 المؤشر مخفي. اضغط على زر '▶️ إظهار' لعرضه.")
+
+    # =================================================================
+    # ===== 6. Inventory =====
+    # =================================================================
+
     st.divider()
     st.subheader("📋 Options Inventory - Net Contracts")
 
@@ -623,7 +1011,6 @@ def single_date_page(symbol):
 
     st.plotly_chart(fig_inv, use_container_width=True)
 
-    # إحصائيات سريعة
     total_oi_calls = df_inventory['openInterest_call'].sum()
     total_oi_puts = df_inventory['openInterest_put'].sum()
     total_net = total_oi_calls - total_oi_puts
@@ -638,7 +1025,151 @@ def single_date_page(symbol):
     with col4:
         st.metric("Current Price", f"${S:.2f}")
 
-    # زر تحميل CSV العام
+    # =================================================================
+    # ===== 7. مؤشر قوة الدفع طه (Gamma Taha) مع Confluence Zones =====
+    # =================================================================
+    st.divider()
+    st.subheader("⚡ قوة الدفع طه (Gamma Taha) + Vanna Exposure + Confluence Zones")
+
+    threshold_taha = settings['taha_confluence_pct']
+    max_gamma_abs = df_sorted['net_gamma'].abs().max()
+    max_vanna_abs = df_sorted['net_vanna'].abs().max()
+    
+    taha_zones = []
+    for idx, row in df_sorted.iterrows():
+        strike = row['strike']
+        net_g = row['net_gamma']
+        net_v = row['net_vanna']
+        
+        if max_gamma_abs == 0 or max_vanna_abs == 0:
+            continue
+        
+        gamma_ratio = net_g / max_gamma_abs
+        vanna_ratio = net_v / max_vanna_abs
+        
+        if gamma_ratio > threshold_taha and vanna_ratio > threshold_taha and S > zero_gamma_level:
+            taha_zones.append({
+                'strike': strike,
+                'type': 'squeeze',
+                'gamma_ratio': gamma_ratio,
+                'vanna_ratio': vanna_ratio,
+                'color': 'limegreen',
+                'marker': '💥'
+            })
+        
+        if gamma_ratio < -threshold_taha and vanna_ratio < -threshold_taha and S < zero_gamma_level:
+            taha_zones.append({
+                'strike': strike,
+                'type': 'meltdown',
+                'gamma_ratio': gamma_ratio,
+                'vanna_ratio': vanna_ratio,
+                'color': 'red',
+                'marker': '⬇️'
+            })
+
+    fig_taha = go.Figure()
+
+    fig_taha.add_trace(go.Bar(
+        x=df_sorted['strike'],
+        y=df_sorted['call_gamma'],
+        marker_color='limegreen',
+        name='Calls',
+        legendgroup='calls'
+    ))
+    fig_taha.add_trace(go.Bar(
+        x=df_sorted['strike'],
+        y=df_sorted['put_gamma'],
+        marker_color='crimson',
+        name='Puts',
+        legendgroup='puts'
+    ))
+    fig_taha.update_layout(barmode='relative')
+
+    fig_taha.add_vline(
+        x=S,
+        line_dash="dash",
+        line_color="white",
+        annotation_text=f"S = {S:.1f}",
+        annotation_position="top",
+        annotation_font=dict(color="white", size=12)
+    )
+
+    fig_taha.add_vline(
+        x=zero_gamma_level,
+        line_dash="dash",
+        line_color="white",
+        annotation_text="Zero-Gamma",
+        annotation_position="bottom",
+        annotation_font=dict(color="white", size=10)
+    )
+
+    fig_taha.add_trace(go.Scatter(
+        x=df_sorted['strike'],
+        y=df_sorted['net_vanna'],
+        mode='lines',
+        line=dict(color='orange', width=2, dash='dash'),
+        name='Vanna Exposure'
+    ))
+
+    for zone in taha_zones:
+        fig_taha.add_vline(
+            x=zone['strike'],
+            line_dash="dot",
+            line_color=zone['color'],
+            annotation_text=f"{zone['marker']} {zone['type'].upper()}",
+            annotation_position="top",
+            annotation_font=dict(color=zone['color'], size=10)
+        )
+
+    min_s = df_sorted['strike'].min()
+    max_s = df_sorted['strike'].max()
+    if S < min_s:
+        min_s = S - (max_s - min_s) * 0.15
+    elif S > max_s:
+        max_s = S + (max_s - min_s) * 0.15
+    center = S
+    half_range = max(center - min_s, max_s - center) * 1.2
+    x_range_taha = (center - half_range, center + half_range)
+
+    fig_taha.update_layout(
+        title="⚡ قوة الدفع طه (Gamma Taha) + Vanna Exposure + Confluence Zones",
+        yaxis_title="Gamma Exposure",
+        xaxis_title="Strike Price",
+        font=dict(color="white"),
+        plot_bgcolor="#111",
+        paper_bgcolor="#222",
+        hovermode="x unified",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="white")),
+        margin=dict(l=10, r=10, t=40, b=40)
+    )
+    fig_taha.update_xaxes(gridcolor='gray', rangeslider=dict(visible=True), range=x_range_taha)
+    fig_taha.update_yaxes(gridcolor='gray')
+
+    st.plotly_chart(fig_taha, use_container_width=True)
+
+    if taha_zones:
+        st.divider()
+        st.subheader("📍 مناطق التقاء غاما وفانا (Confluence Zones) - خاصة بـ 🧑‍🏫 طه")
+        
+        squeeze_zones = [z for z in taha_zones if z['type'] == 'squeeze']
+        meltdown_zones = [z for z in taha_zones if z['type'] == 'meltdown']
+        
+        if squeeze_zones:
+            st.success(f"💥 Squeeze Zones (صاعد) عند: {', '.join([f'${z['strike']:.2f}' for z in squeeze_zones])}")
+        if meltdown_zones:
+            st.error(f"⬇️ Meltdown Zones (هابط) عند: {', '.join([f'${z['strike']:.2f}' for z in meltdown_zones])}")
+        
+        for zone in taha_zones:
+            st.caption(
+                f"عند ${zone['strike']:.2f}: "
+                f"Gamma = {zone['gamma_ratio']:.2%} من Max, "
+                f"Vanna = {zone['vanna_ratio']:.2%} من Max"
+            )
+
+    # =================================================================
+    # ===== 8. تحميل CSV =====
+    # =================================================================
+
     st.divider()
     csv_data_all = df_sorted.to_csv(index=False).encode('utf-8')
     st.download_button(
@@ -649,11 +1180,10 @@ def single_date_page(symbol):
         key='download_csv_single'
     )
 
-    # ===== التحديث التلقائي =====
-    if any_frozen:
-        st_autorefresh(interval=0, key="auto_frozen")
-    else:
+    if should_autorefresh():
         st_autorefresh(interval=30 * 1000, key="auto_normal")
+    else:
+        st.caption("⏸️ التحديث التلقائي متوقف مؤقتاً (خارج ساعات التداول أو قبيل الإغلاق).")
 
 # ========== صفحة المقارنة ==========
 def multi_date_page(symbol):
@@ -672,10 +1202,12 @@ def multi_date_page(symbol):
                 st.rerun()
         
         ticker_symbol = "^SPX" if symbol == "SPX" else symbol
+        ticker_symbol = "^NDX" if symbol == "NDX" else ticker_symbol
         ticker = yf.Ticker(ticker_symbol)
         current_price = ticker.history(period="1d")['Close'].iloc[-1]
         
-        market_status = "🟢 Open" if is_market_open() else "🔴 Closed"
+        status, _ = get_market_status()
+        market_status = "🟢 Open" if status == "open" else "🔴 Closed"
         st.metric("Current Price", f"${current_price:.2f}", delta=market_status)
         st.caption(f"🕒 {datetime.datetime.now().strftime('%I:%M:%S %p')}")
 
@@ -721,7 +1253,7 @@ def multi_date_page(symbol):
             'strike': K,
             'total_oi': oi_c + oi_p,
             'total_delta': oi_c * delta_c + oi_p * delta_p,
-            'total_gamma': (oi_c + oi_p) * gamma_val,
+            'total_gamma': (oi_c - oi_p) * gamma_val,
             'total_vanna': (oi_c + oi_p) * vanna_val,
             'total_vega': (oi_c + oi_p) * vega_val,
             'total_theta': oi_c * theta_c + oi_p * theta_p,
@@ -770,17 +1302,18 @@ def multi_date_page(symbol):
                       annotation_position="top",
                       annotation_font=dict(color="white", size=12))
         
-        fig.update_layout(title=title, xaxis_title="Strike Price", yaxis_title="Value",
+        display_title = METRICS_LABELS.get(title, title)
+        fig.update_layout(title=display_title, xaxis_title="Strike Price", yaxis_title="Value",
                           font=dict(color="white"), plot_bgcolor="#111", paper_bgcolor="#222",
                           showlegend=True, margin=dict(l=10, r=10, t=40, b=40))
         fig.update_xaxes(gridcolor='gray', rangeslider=dict(visible=True), range=x_range)
         fig.update_yaxes(gridcolor='gray')
         st.plotly_chart(fig, use_container_width=True)
 
-# ========== التطبيق الرئيسي (مع القائمة المنسدلة) ==========
+# ========== التطبيق الرئيسي ==========
 def main():
     if "show_visitors" not in st.session_state:
-        st.session_state.show_visitors = True
+        st.session_state.show_visitors = False
 
     if "logged_in" not in st.session_state or not st.session_state.logged_in:
         login_page()
@@ -793,7 +1326,6 @@ def main():
             st.session_state.username = ""
             st.rerun()
 
-    # ===== إعادة القائمة المنسدلة =====
     col_title, col_selector = st.columns([2, 1])
     with col_title:
         st.title("📊 رادار عادل للخيارات الكمية")
@@ -801,7 +1333,7 @@ def main():
     with col_selector:
         symbol = st.selectbox(
             "🔍 اختر الصندوق / المؤشر",
-            ["GLD", "SPY", "SPX", "QQQ"],
+            ["GLD", "SPY", "SPX", "QQQ", "NDX"],
             index=0,
             help="اختر الصندوق المتداول أو المؤشر لتحليل خياراته"
         )
@@ -819,7 +1351,6 @@ def main():
     else:
         multi_date_page(symbol)
 
-    # ===== عرض البلوجن =====
     track_visitors(st.session_state.username)
 
     if st.session_state.username == "admin":
@@ -838,7 +1369,7 @@ def main():
         if st.session_state.show_visitors:
             display_visitor_widget()
         else:
-            st.caption("🔒 تم إخفاء الجدول. اضغط على زر '👀 إظهار' لإعادة عرضه.")
+            st.caption("🔒 الجدول مخفي. اضغط على زر '👀 إظهار' لعرضه.")
 
 if __name__ == "__main__":
     main()
