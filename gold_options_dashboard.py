@@ -30,6 +30,7 @@ METRICS_LABELS = {
     "Gamma Gold": "⚡ قوة الدفع الذهبية (Gamma Gold)",
     "Delta Exposure": "📌 دلتا (Delta Exposure)",
     "Vanna Exposure": "🌊 تأثير التقلب (Vanna Exposure)",
+    "Vanna Gold": "🌊 تأثير التقلب الذهبي (Vanna Gold) + Gamma",  # تمت إعادتها
     "Vega Exposure": "📈 فيغا (Vega Exposure)",
     "Theta Exposure": "⏳ ثيتا (Theta Exposure)",
     "Charm Exposure (x10k)": "🕰️ سحر الدلتا (Charm Exposure ×10k)",
@@ -377,7 +378,7 @@ def calculate_zero_gamma(df, S):
     
     return S, net_gamma_vals
 
-# ========== حساب مناطق التقاء غاما وفانا ==========
+# ========== حساب مناطق التقاء غاما وفانا (للأعلى) ==========
 def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     threshold = settings.get('confluence_pct', 0.30)
     
@@ -463,6 +464,7 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
             borderpad=4
         )
     
+    # إضافة خط Gamma لـ Vanna Gold
     if show_gamma_line and gamma_line_data is not None:
         fig.add_trace(go.Scatter(
             x=df['strike'],
@@ -703,7 +705,10 @@ def single_date_page(symbol):
     df_sorted['put_gamma_gold'] = oi_p * gamma_val * -1.2
     df_sorted['call_vanna'] = oi_c * vanna_val
     df_sorted['put_vanna'] = oi_p * vanna_val
-    # تم حذف Vanna Gold
+    # ===== إعادة Vanna Gold =====
+    df_sorted['call_vanna_gold'] = oi_c * vanna_val * 1.2
+    df_sorted['put_vanna_gold'] = oi_p * vanna_val * 1.2
+    # ===========================
     df_sorted['openInterest_call_display'] = oi_c
     df_sorted['openInterest_put_display'] = oi_p * -1
     df_sorted['call_vega'] = oi_c * vega_val
@@ -748,7 +753,7 @@ def single_date_page(symbol):
     distance_to_zero_gamma = S - zero_gamma_level
     setup_signal = "🟢 Bullish Setup" if S > zero_gamma_level else "🔴 Bearish Setup"
 
-    # ===== Confluence Zones =====
+    # ===== Confluence Zones (للأعلى) =====
     max_gamma = max(abs(df_sorted['net_gamma'].max()), abs(df_sorted['net_gamma'].min())) if 'net_gamma' in df_sorted else 1
     max_vanna = max(abs(df_sorted['net_vanna'].max()), abs(df_sorted['net_vanna'].min())) if 'net_vanna' in df_sorted else 1
     
@@ -782,7 +787,7 @@ def single_date_page(symbol):
                   delta_color="normal")
 
     # =================================================================
-    # ===== 2. Confluence Zones (العناصر المنفصلة) =====
+    # ===== 2. Confluence Zones (تم إعادتها إلى الأعلى) =====
     # =================================================================
 
     if zones:
@@ -835,7 +840,7 @@ def single_date_page(symbol):
         st.write(f"**الحالة:** {'⚠️ غير طبيعي' if abs(deviation) > 0.20 else '✅ طبيعي'}")
 
     # =================================================================
-    # ===== 4. المؤشرات الأساسية =====
+    # ===== 4. المؤشرات الأساسية (مع إعادة Vanna Gold) =====
     # =================================================================
 
     metrics = [
@@ -844,7 +849,9 @@ def single_date_page(symbol):
         ('call_gamma_gold', 'put_gamma_gold', 'Gamma Gold', 'Gamma Exposure'),
         ('call_delta', 'put_delta', 'Delta Exposure', 'Delta Exposure'),
         ('call_vanna', 'put_vanna', 'Vanna Exposure', 'Vanna Exposure'),
-        # تم حذف Vanna Gold
+        # ===== إعادة Vanna Gold =====
+        ('call_vanna_gold', 'put_vanna_gold', 'Vanna Gold', 'Vanna Exposure'),
+        # ============================
         ('call_vega', 'put_vega', 'Vega Exposure', 'Vega Exposure'),
         ('call_theta', 'put_theta', 'Theta Exposure', 'Theta Exposure'),
         ('call_charm', 'put_charm', 'Charm Exposure (x10k)', 'Charm (x10k)'),
@@ -857,25 +864,31 @@ def single_date_page(symbol):
     for call_col, put_col, title, yaxis in metrics:
         x_range = st.session_state.get(f"xrange_{title}", None)
         
-        # ===== إعادة المناطق إلى Gamma Gold =====
+        # ===== تمرير المناطق إلى Gamma Gold =====
         if title == "Gamma Gold":
             zero_gamma = zero_gamma_level
-            zones_list = zones  # تم تمرير المناطق إلى Gamma Gold
+            zones_list = zones  # تم إعادة تمرير المناطق إلى Gamma Gold
             gex_flow_val = gex_flow
         else:
             zero_gamma = None
             zones_list = None
             gex_flow_val = None
         
-        # ===== إزالة Vanna Gold (لم يعد هناك show_gamma) =====
+        # ===== إظهار خط Gamma في Vanna Gold =====
+        show_gamma = False
+        gamma_line = None
+        if title == "Vanna Gold":
+            show_gamma = True
+            gamma_line = df_sorted['call_gamma_gold'].values
+        
         fig = plot_metric_single(
             df_sorted, S, call_col, put_col, title, yaxis, 
             x_range=x_range,
             zero_gamma_level=zero_gamma,
             zones=zones_list,
             gex_flow=gex_flow_val,
-            show_gamma_line=False,
-            gamma_line_data=None
+            show_gamma_line=show_gamma,
+            gamma_line_data=gamma_line
         )
 
         col_plot, col_freeze = st.columns([0.96, 0.04])
