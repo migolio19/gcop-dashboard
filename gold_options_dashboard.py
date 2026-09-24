@@ -12,6 +12,7 @@ import hashlib
 import time
 import urllib.request
 import os
+import requests  # ✅ تمت الإضافة
 from collections import deque
 
 # ========== إعدادات الصفحة ==========
@@ -30,7 +31,7 @@ METRICS_LABELS = {
     "Gamma Gold": "⚡ قوة الدفع الذهبية (Gamma Gold)",
     "Delta Exposure": "📌 دلتا (Delta Exposure)",
     "Vanna Exposure": "🌊 تأثير التقلب (Vanna Exposure)",
-    "Vanna Gold": "🌊 تأثير التقلب الذهبي (Vanna Gold) + Gamma",  # تمت إعادتها
+    "Vanna Gold": "🌊 تأثير التقلب الذهبي (Vanna Gold) + Gamma",
     "Vega Exposure": "📈 فيغا (Vega Exposure)",
     "Theta Exposure": "⏳ ثيتا (Theta Exposure)",
     "Charm Exposure (x10k)": "🕰️ سحر الدلتا (Charm Exposure ×10k)",
@@ -291,7 +292,7 @@ class GEXHistory:
 if 'gex_history' not in st.session_state:
     st.session_state.gex_history = GEXHistory(max_minutes=120)
 
-# ========== جلب البيانات ==========
+# ========== جلب البيانات (مع Session و Headers لتفادي الحظر على Cloud) ==========
 @st.cache_data(ttl=120)
 def fetch_options_data(symbol, expiration_date=None):
     if symbol == "SPX":
@@ -299,43 +300,66 @@ def fetch_options_data(symbol, expiration_date=None):
     elif symbol == "NDX":
         symbol = "^NDX"
     
-    ticker = yf.Ticker(symbol)
-    hist = ticker.history(period="1d")
-    if hist.empty:
-        st.error(f"⚠️ لا توجد بيانات للسعر للرمز {symbol}. تحقق من الاتصال بالإنترنت أو الرمز.")
-        return None, None, None, None
+    # ✅ إنشاء session مع headers لتفادي حظر Yahoo Finance
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+    })
     
-    current_price = hist['Close'].iloc[-1]
-    all_expirations = ticker.options
+    try:
+        ticker = yf.Ticker(symbol, session=session)
+        
+        # محاولة جلب البيانات مع أكثر من فترة
+        hist = ticker.history(period="5d")
+        if hist.empty:
+            hist = ticker.history(period="1mo")
+        
+        if hist.empty:
+            st.error(f"⚠️ لا توجد بيانات للسعر للرمز {symbol}. تحقق من الاتصال أو الرمز.")
+            return None, None, None, None
+        
+        current_price = hist['Close'].iloc[-1]
+        all_expirations = ticker.options
 
-    if not all_expirations:
-        st.warning(f"⚠️ لا توجد تواريخ انتهاء متاحة للرمز {symbol}.")
+        if not all_expirations:
+            # محاولة ثانية بعد ثانية واحدة (لتفادي rate limit)
+            time.sleep(1)
+            all_expirations = ticker.options
+        
+        if not all_expirations:
+            st.warning(f"⚠️ لا توجد تواريخ انتهاء متاحة للرمز {symbol}. قد يكون السوق مغلقاً أو هناك قيود على Yahoo Finance.")
+            return None, None, None, None
+
+        if expiration_date is None or expiration_date not in all_expirations:
+            expiration_date = all_expirations[0]
+
+        opt = ticker.option_chain(expiration_date)
+        calls = opt.calls.copy()
+        puts = opt.puts.copy()
+
+        df = pd.merge(calls[['strike','openInterest','impliedVolatility']],
+                      puts[['strike','openInterest','impliedVolatility']],
+                      on='strike', how='outer', suffixes=('_call','_put'))
+
+        df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
+                   'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
+
+        total_oi = df['openInterest_call'] + df['openInterest_put']
+        df['weighted_IV'] = np.where(total_oi > 0,
+                                     (df['openInterest_call'] * df['impliedVolatility_call'] +
+                                      df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
+                                     (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
+
+        exp_date_dt = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
+        now = datetime.datetime.now()
+        T = max((exp_date_dt - now).days / 365.0, 2/365.0)
+        return current_price, expiration_date, df, T
+        
+    except Exception as e:
+        st.error(f"⚠️ حدث خطأ أثناء جلب البيانات: {str(e)}")
         return None, None, None, None
-
-    if expiration_date is None or expiration_date not in all_expirations:
-        expiration_date = all_expirations[0]
-
-    opt = ticker.option_chain(expiration_date)
-    calls = opt.calls.copy()
-    puts = opt.puts.copy()
-
-    df = pd.merge(calls[['strike','openInterest','impliedVolatility']],
-                  puts[['strike','openInterest','impliedVolatility']],
-                  on='strike', how='outer', suffixes=('_call','_put'))
-
-    df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
-               'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
-
-    total_oi = df['openInterest_call'] + df['openInterest_put']
-    df['weighted_IV'] = np.where(total_oi > 0,
-                                 (df['openInterest_call'] * df['impliedVolatility_call'] +
-                                  df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
-                                 (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
-
-    exp_date_dt = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
-    now = datetime.datetime.now()
-    T = max((exp_date_dt - now).days / 365.0, 2/365.0)
-    return current_price, expiration_date, df, T
 
 # ========== حساب IV Skew ==========
 def calculate_iv_skew(df, S, settings):
@@ -378,7 +402,7 @@ def calculate_zero_gamma(df, S):
     
     return S, net_gamma_vals
 
-# ========== حساب مناطق التقاء غاما وفانا (للأعلى) ==========
+# ========== حساب مناطق التقاء غاما وفانا ==========
 def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     threshold = settings.get('confluence_pct', 0.30)
     
@@ -464,7 +488,6 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
             borderpad=4
         )
     
-    # إضافة خط Gamma لـ Vanna Gold
     if show_gamma_line and gamma_line_data is not None:
         fig.add_trace(go.Scatter(
             x=df['strike'],
@@ -601,7 +624,6 @@ def single_date_page(symbol):
     S = current_price
     q = 0.0
 
-    # ===== إعدادات المستخدم =====
     with st.sidebar:
         st.markdown("## ⚙️ الإعدادات")
         r = st.slider("سعر الفائدة الخالي من المخاطر (r)", 0.0, 0.2, 0.05, 0.005)
@@ -705,10 +727,8 @@ def single_date_page(symbol):
     df_sorted['put_gamma_gold'] = oi_p * gamma_val * -1.2
     df_sorted['call_vanna'] = oi_c * vanna_val
     df_sorted['put_vanna'] = oi_p * vanna_val
-    # ===== إعادة Vanna Gold =====
     df_sorted['call_vanna_gold'] = oi_c * vanna_val * 1.2
     df_sorted['put_vanna_gold'] = oi_p * vanna_val * 1.2
-    # ===========================
     df_sorted['openInterest_call_display'] = oi_c
     df_sorted['openInterest_put_display'] = oi_p * -1
     df_sorted['call_vega'] = oi_c * vega_val
@@ -727,7 +747,6 @@ def single_date_page(symbol):
     df_sorted['total_oi'] = df_sorted['openInterest_call'] + df_sorted['openInterest_put']
     df_sorted['gamma_ratio'] = df_sorted['total_gamma'] / (df_sorted['total_oi'] + 1)
 
-    # ===== IV Skew =====
     skew_value, call_iv, put_iv, call_strike, put_strike = calculate_iv_skew(df_sorted, S, settings)
     
     if 'iv_skew_history' not in st.session_state:
@@ -748,18 +767,15 @@ def single_date_page(symbol):
     
     deviation = (skew_value - sma_value) / sma_value if sma_value != 0 else 0
 
-    # ===== Zero-Gamma =====
     zero_gamma_level, net_gamma_vals = calculate_zero_gamma(df_sorted, S)
     distance_to_zero_gamma = S - zero_gamma_level
     setup_signal = "🟢 Bullish Setup" if S > zero_gamma_level else "🔴 Bearish Setup"
 
-    # ===== Confluence Zones (للأعلى) =====
     max_gamma = max(abs(df_sorted['net_gamma'].max()), abs(df_sorted['net_gamma'].min())) if 'net_gamma' in df_sorted else 1
     max_vanna = max(abs(df_sorted['net_vanna'].max()), abs(df_sorted['net_vanna'].min())) if 'net_vanna' in df_sorted else 1
     
     zones = calculate_confluence_zones(df_sorted, S, max_gamma, max_vanna, settings)
 
-    # ===== GEX Flow =====
     current_net_gex = df_sorted['net_gamma'].sum()
     st.session_state.gex_history.add(current_net_gex)
     
@@ -787,7 +803,7 @@ def single_date_page(symbol):
                   delta_color="normal")
 
     # =================================================================
-    # ===== 2. Confluence Zones (تم إعادتها إلى الأعلى) =====
+    # ===== 2. Confluence Zones =====
     # =================================================================
 
     if zones:
@@ -798,9 +814,11 @@ def single_date_page(symbol):
         meltdown_zones = [z for z in zones if z['type'] == 'meltdown']
         
         if squeeze_zones:
-            st.success(f"💥 Squeeze Zones (صاعد) عند: {', '.join([f'${z['strike']:.2f}' for z in squeeze_zones])}")
+            squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
+            st.success(f"💥 Squeeze Zones (صاعد) عند: {squeeze_str}")
         if meltdown_zones:
-            st.error(f"⬇️ Meltdown Zones (هابط) عند: {', '.join([f'${z['strike']:.2f}' for z in meltdown_zones])}")
+            meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
+            st.error(f"⬇️ Meltdown Zones (هابط) عند: {meltdown_str}")
         
         for zone in zones:
             if zone['type'] == 'squeeze' and S <= zero_gamma_level:
@@ -840,7 +858,7 @@ def single_date_page(symbol):
         st.write(f"**الحالة:** {'⚠️ غير طبيعي' if abs(deviation) > 0.20 else '✅ طبيعي'}")
 
     # =================================================================
-    # ===== 4. المؤشرات الأساسية (مع إعادة Vanna Gold) =====
+    # ===== 4. المؤشرات الأساسية =====
     # =================================================================
 
     metrics = [
@@ -849,9 +867,7 @@ def single_date_page(symbol):
         ('call_gamma_gold', 'put_gamma_gold', 'Gamma Gold', 'Gamma Exposure'),
         ('call_delta', 'put_delta', 'Delta Exposure', 'Delta Exposure'),
         ('call_vanna', 'put_vanna', 'Vanna Exposure', 'Vanna Exposure'),
-        # ===== إعادة Vanna Gold =====
         ('call_vanna_gold', 'put_vanna_gold', 'Vanna Gold', 'Vanna Exposure'),
-        # ============================
         ('call_vega', 'put_vega', 'Vega Exposure', 'Vega Exposure'),
         ('call_theta', 'put_theta', 'Theta Exposure', 'Theta Exposure'),
         ('call_charm', 'put_charm', 'Charm Exposure (x10k)', 'Charm (x10k)'),
@@ -864,17 +880,15 @@ def single_date_page(symbol):
     for call_col, put_col, title, yaxis in metrics:
         x_range = st.session_state.get(f"xrange_{title}", None)
         
-        # ===== تمرير المناطق إلى Gamma Gold =====
         if title == "Gamma Gold":
             zero_gamma = zero_gamma_level
-            zones_list = zones  # تم إعادة تمرير المناطق إلى Gamma Gold
+            zones_list = zones
             gex_flow_val = gex_flow
         else:
             zero_gamma = None
             zones_list = None
             gex_flow_val = None
         
-        # ===== إظهار خط Gamma في Vanna Gold =====
         show_gamma = False
         gamma_line = None
         if title == "Vanna Gold":
@@ -1039,7 +1053,7 @@ def single_date_page(symbol):
         st.metric("Current Price", f"${S:.2f}")
 
     # =================================================================
-    # ===== 7. مؤشر قوة الدفع طه (Gamma Taha) مع Confluence Zones =====
+    # ===== 7. مؤشر قوة الدفع طه (Gamma Taha) =====
     # =================================================================
     st.divider()
     st.subheader("⚡ قوة الدفع طه (Gamma Taha) + Vanna Exposure + Confluence Zones")
@@ -1168,9 +1182,11 @@ def single_date_page(symbol):
         meltdown_zones = [z for z in taha_zones if z['type'] == 'meltdown']
         
         if squeeze_zones:
-            st.success(f"💥 Squeeze Zones (صاعد) عند: {', '.join([f'${z['strike']:.2f}' for z in squeeze_zones])}")
+            squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
+            st.success(f"💥 Squeeze Zones (صاعد) عند: {squeeze_str}")
         if meltdown_zones:
-            st.error(f"⬇️ Meltdown Zones (هابط) عند: {', '.join([f'${z['strike']:.2f}' for z in meltdown_zones])}")
+            meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
+            st.error(f"⬇️ Meltdown Zones (هابط) عند: {meltdown_str}")
         
         for zone in taha_zones:
             st.caption(
