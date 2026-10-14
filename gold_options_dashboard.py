@@ -1,5 +1,4 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
@@ -12,7 +11,6 @@ import hashlib
 import time
 import urllib.request
 import os
-import requests
 from collections import deque
 
 st.set_page_config(page_title="رادار عادل للخيارات الكمية", layout="wide")
@@ -38,6 +36,105 @@ METRICS_LABELS = {
 }
 
 VISITOR_FILE = "visitors_log.json"
+DATA_FILE = "options_data.json"
+
+
+# ============================================================
+# دوال قراءة البيانات من ملف JSON (بدلاً من Yahoo Finance)
+# ============================================================
+
+@st.cache_data(ttl=60)
+def get_options_metadata():
+    """قراءة معلومات عامة عن آخر تحديث للبيانات."""
+    try:
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
+        return {
+            "last_updated": data.get("last_updated", "Unknown"),
+            "symbols": list(data.get("symbols", {}).keys())
+        }
+    except:
+        return {"last_updated": "Unknown", "symbols": []}
+
+
+@st.cache_data(ttl=60)
+def get_available_expirations(symbol):
+    """قراءة تواريخ الانتهاء المتاحة لرمز معين."""
+    try:
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
+        if symbol not in data.get("symbols", {}):
+            return []
+        return list(data["symbols"][symbol]["expirations"].keys())
+    except:
+        return []
+
+
+@st.cache_data(ttl=60)
+def get_current_price(symbol):
+    """قراءة السعر الحالي لرمز معين."""
+    try:
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
+        if symbol not in data.get("symbols", {}):
+            return None
+        return data["symbols"][symbol]["current_price"]
+    except:
+        return None
+
+
+@st.cache_data(ttl=60)
+def fetch_options_data(symbol, expiration_date=None):
+    """قراءة بيانات الخيارات من ملف JSON."""
+    try:
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        st.error("options_data.json not found. GitHub Actions has not run yet.")
+        return None, None, None, None
+    except Exception as e:
+        st.error(f"Error reading JSON: {e}")
+        return None, None, None, None
+    
+    if symbol not in data.get("symbols", {}):
+        st.error(f"No data for {symbol} in options_data.json.")
+        return None, None, None, None
+    
+    symbol_data = data["symbols"][symbol]
+    current_price = symbol_data["current_price"]
+    all_expirations = list(symbol_data["expirations"].keys())
+    
+    if not all_expirations:
+        st.error(f"No expirations for {symbol}.")
+        return None, None, None, None
+    
+    if expiration_date is None or expiration_date not in all_expirations:
+        expiration_date = all_expirations[0]
+    
+    exp_data = symbol_data["expirations"][expiration_date]
+    calls = pd.DataFrame(exp_data["calls"])
+    puts = pd.DataFrame(exp_data["puts"])
+    T = exp_data["T"]
+    
+    df = pd.merge(calls[['strike', 'openInterest', 'impliedVolatility']],
+                  puts[['strike', 'openInterest', 'impliedVolatility']],
+                  on='strike', how='outer', suffixes=('_call', '_put'))
+    
+    df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
+               'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
+    
+    total_oi = df['openInterest_call'] + df['openInterest_put']
+    df['weighted_IV'] = np.where(total_oi > 0,
+                                 (df['openInterest_call'] * df['impliedVolatility_call'] +
+                                  df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
+                                 (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
+    
+    return current_price, expiration_date, df, T
+
+
+# ============================================================
+# نظام تتبع الزوار
+# ============================================================
 
 def get_visitor_ip_and_country():
     try:
@@ -50,6 +147,7 @@ def get_visitor_ip_and_country():
         return ip, 'UN'
     except Exception:
         return '127.0.0.1', 'Local'
+
 
 def track_visitors(username=None):
     now = time.time()
@@ -90,6 +188,7 @@ def track_visitors(username=None):
     
     return filtered_logs
 
+
 def display_visitor_widget():
     logs = track_visitors()
     total_visitors = len(logs)
@@ -119,6 +218,11 @@ def display_visitor_widget():
             hide_index=True,
             height=min(200, 35 + 35 * total_visitors)
         )
+
+
+# ============================================================
+# صفحة تسجيل الدخول
+# ============================================================
 
 def login_page():
     st.markdown("""
@@ -150,6 +254,11 @@ def login_page():
                 else:
                     st.error("Invalid username or password")
 
+
+# ============================================================
+# حالة السوق
+# ============================================================
+
 def get_market_status():
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     ny_tz = zoneinfo.ZoneInfo("America/New_York")
@@ -166,6 +275,7 @@ def get_market_status():
         return "open", now_ny
     else:
         return "closed", now_ny
+
 
 def should_autorefresh():
     status, now_ny = get_market_status()
@@ -184,29 +294,38 @@ def should_autorefresh():
         else:
             return True
 
+
+# ============================================================
+# دوال بلاك-شولز
+# ============================================================
+
 def d1(S, K, T, r, sigma, q=0.0):
     return (np.log(S / K) + (r - q + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
 
+
 def delta_call(S, K, T, r, sigma, q=0.0):
-    d1_val = d1(S, K, T, r, sigma, q)
-    return np.exp(-q * T) * norm.cdf(d1_val)
+    return np.exp(-q * T) * norm.cdf(d1(S, K, T, r, sigma, q))
+
 
 def delta_put(S, K, T, r, sigma, q=0.0):
-    d1_val = d1(S, K, T, r, sigma, q)
-    return np.exp(-q * T) * (norm.cdf(d1_val) - 1)
+    return np.exp(-q * T) * (norm.cdf(d1(S, K, T, r, sigma, q)) - 1)
+
 
 def gamma(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
     return np.exp(-q * T) * norm.pdf(d1_val) / (S * sigma * np.sqrt(T))
+
 
 def vanna(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
     d2_val = d1_val - sigma * np.sqrt(T)
     return -np.exp(-q * T) * norm.pdf(d1_val) * d2_val / sigma
 
+
 def vega(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
     return S * np.exp(-q * T) * norm.pdf(d1_val) * np.sqrt(T)
+
 
 def theta_call(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
@@ -216,6 +335,7 @@ def theta_call(S, K, T, r, sigma, q=0.0):
     term3 = q * S * np.exp(-q * T) * norm.cdf(d1_val)
     return term1 + term2 + term3
 
+
 def theta_put(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
     d2_val = d1_val - sigma * np.sqrt(T)
@@ -223,6 +343,7 @@ def theta_put(S, K, T, r, sigma, q=0.0):
     term2 = r * K * np.exp(-r * T) * norm.cdf(-d2_val)
     term3 = -q * S * np.exp(-q * T) * norm.cdf(-d1_val)
     return term1 + term2 + term3
+
 
 def charm_call(S, K, T, r, sigma, q=0.0):
     d1_val = d1(S, K, T, r, sigma, q)
@@ -233,13 +354,20 @@ def charm_call(S, K, T, r, sigma, q=0.0):
     term2 = q * np.exp(-q * T) * Nd1
     return term1 + term2
 
+
 def charm_put(S, K, T, r, sigma, q=0.0):
     return charm_call(S, K, T, r, sigma, q) - q * np.exp(-q * T)
+
 
 def speed(S, K, T, r, sigma, q=0.0):
     g = gamma(S, K, T, r, sigma, q)
     d1_val = d1(S, K, T, r, sigma, q)
     return -g * (d1_val / (sigma * np.sqrt(T)) + 1) / S
+
+
+# ============================================================
+# GEX History
+# ============================================================
 
 class GEXHistory:
     def __init__(self, max_minutes=60):
@@ -266,75 +394,14 @@ class GEXHistory:
     def get_current(self):
         return self.history[-1][1] if self.history else None
 
+
 if 'gex_history' not in st.session_state:
     st.session_state.gex_history = GEXHistory(max_minutes=120)
 
-@st.cache_data(ttl=120)
-def fetch_options_data(symbol, expiration_date=None):
-    if symbol == "SPX":
-        symbol = "^SPX"
-    elif symbol == "NDX":
-        symbol = "^NDX"
-    
-    try:
-        try:
-            from curl_cffi import requests as curl_requests
-            session = curl_requests.Session(impersonate="chrome")
-            ticker = yf.Ticker(symbol, session=session)
-        except ImportError:
-            session = requests.Session()
-            session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            })
-            ticker = yf.Ticker(symbol, session=session)
-        
-        hist = ticker.history(period="5d")
-        if hist.empty:
-            hist = ticker.history(period="1mo")
-        
-        if hist.empty:
-            st.error(f"No price data for {symbol}.")
-            return None, None, None, None
-        
-        current_price = hist['Close'].iloc[-1]
-        all_expirations = ticker.options
 
-        if not all_expirations:
-            time.sleep(1)
-            all_expirations = ticker.options
-        
-        if not all_expirations:
-            st.warning(f"No expiration dates for {symbol}. Market may be closed or Yahoo Finance is blocking.")
-            return None, None, None, None
-
-        if expiration_date is None or expiration_date not in all_expirations:
-            expiration_date = all_expirations[0]
-
-        opt = ticker.option_chain(expiration_date)
-        calls = opt.calls.copy()
-        puts = opt.puts.copy()
-
-        df = pd.merge(calls[['strike','openInterest','impliedVolatility']],
-                      puts[['strike','openInterest','impliedVolatility']],
-                      on='strike', how='outer', suffixes=('_call','_put'))
-
-        df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
-                   'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
-
-        total_oi = df['openInterest_call'] + df['openInterest_put']
-        df['weighted_IV'] = np.where(total_oi > 0,
-                                     (df['openInterest_call'] * df['impliedVolatility_call'] +
-                                      df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
-                                     (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
-
-        exp_date_dt = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
-        now = datetime.datetime.now()
-        T = max((exp_date_dt - now).days / 365.0, 2/365.0)
-        return current_price, expiration_date, df, T
-        
-    except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
-        return None, None, None, None
+# ============================================================
+# حساب IV Skew وصفر غاما ومناطق التقاء
+# ============================================================
 
 def calculate_iv_skew(df, S, settings):
     call_pct = settings.get('iv_skew_call_pct', 1.15)
@@ -356,6 +423,7 @@ def calculate_iv_skew(df, S, settings):
     skew = call_iv - put_iv
     return skew, call_iv, put_iv, df.iloc[call_idx]['strike'], df.iloc[put_idx]['strike']
 
+
 def calculate_zero_gamma(df, S):
     if 'net_gamma' in df.columns:
         net_gamma_vals = df['net_gamma'].values
@@ -374,6 +442,7 @@ def calculate_zero_gamma(df, S):
             return zero_level, net_gamma_vals
     
     return S, net_gamma_vals
+
 
 def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     threshold = settings.get('confluence_pct', 0.30)
@@ -406,6 +475,11 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
             })
     
     return zones
+
+
+# ============================================================
+# دوال الرسم
+# ============================================================
 
 def plot_metric_single(df, S, call_col, put_col, title, y_axis, 
                        call_color='limegreen', put_color='crimson', x_range=None,
@@ -484,6 +558,7 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
     fig.update_yaxes(gridcolor='gray')
     return fig
 
+
 def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
     fig = go.Figure()
     
@@ -529,6 +604,7 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
     fig.update_yaxes(gridcolor='gray')
     return fig
 
+
 def plot_ratio_line(df, S, x_col, y_col, title, y_axis, line_color='magenta'):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -555,6 +631,7 @@ def plot_ratio_line(df, S, x_col, y_col, title, y_axis, line_color='magenta'):
     fig.update_yaxes(gridcolor='gray')
     return fig
 
+
 def plot_cumulative_delta(df, S, x_col, y_col, title, y_axis, line_color='deepskyblue'):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -580,6 +657,11 @@ def plot_cumulative_delta(df, S, x_col, y_col, title, y_axis, line_color='deepsk
     fig.update_xaxes(gridcolor='gray')
     fig.update_yaxes(gridcolor='gray')
     return fig
+
+
+# ============================================================
+# صفحة التحليل
+# ============================================================
 
 def single_date_page(symbol):
     today = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -627,6 +709,7 @@ def single_date_page(symbol):
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Quick Refresh", width="stretch"):
+                st.cache_data.clear()
                 st.rerun()
         with col2:
             if st.button("Force Refresh", width="stretch"):
@@ -1136,6 +1219,7 @@ def single_date_page(symbol):
     else:
         st.caption("Auto-refresh paused (outside market hours).")
 
+
 def multi_date_page(symbol):
     st.header("Compare Different Expiration Dates")
 
@@ -1145,29 +1229,28 @@ def multi_date_page(symbol):
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Quick Refresh", key="refresh_multi_quick", width="stretch"):
+                st.cache_data.clear()
                 st.rerun()
         with col2:
             if st.button("Force Refresh", key="refresh_multi_force", width="stretch"):
                 st.cache_data.clear()
                 st.rerun()
         
-        ticker_symbol = "^SPX" if symbol == "SPX" else symbol
-        ticker_symbol = "^NDX" if symbol == "NDX" else ticker_symbol
-        ticker = yf.Ticker(ticker_symbol)
-        current_price = ticker.history(period="1d")['Close'].iloc[-1]
+        current_price = get_current_price(symbol)
         
         status, _ = get_market_status()
         market_status = "Open" if status == "open" else "Closed"
-        st.metric("Current Price", f"${current_price:.2f}", delta=market_status)
+        if current_price:
+            st.metric("Current Price", f"${current_price:.2f}", delta=market_status)
         st.caption(f"{datetime.datetime.now().strftime('%I:%M:%S %p')}")
 
-    all_exps = ticker.options
+    all_exps = get_available_expirations(symbol)
     if not all_exps:
         st.error("No expiration dates available.")
         return
 
     selected_exps = st.multiselect("Select expiration dates (max 5)", all_exps,
-                                   default=all_exps[:2] if len(all_exps)>=2 else all_exps,
+                                   default=all_exps[:2] if len(all_exps) >= 2 else all_exps,
                                    max_selections=5)
 
     if not selected_exps:
@@ -1175,7 +1258,7 @@ def multi_date_page(symbol):
         return
 
     dfs = {}
-    S = current_price
+    S = current_price if current_price else 0
     q = 0.0
     SCALE = 10000
     for exp in selected_exps:
@@ -1234,7 +1317,7 @@ def multi_date_page(symbol):
                 fig.add_trace(go.Scatter(x=data['strike'], y=data[key],
                                          mode='lines', name=exp))
         
-        if all_strikes:
+        if all_strikes and S:
             min_s = min(all_strikes)
             max_s = max(all_strikes)
             if S < min_s:
@@ -1247,10 +1330,11 @@ def multi_date_page(symbol):
         else:
             x_range = None
         
-        fig.add_vline(x=S, line_dash="dash", line_color="white",
-                      annotation_text=f"S = {S:.1f}",
-                      annotation_position="top",
-                      annotation_font=dict(color="white", size=12))
+        if S:
+            fig.add_vline(x=S, line_dash="dash", line_color="white",
+                          annotation_text=f"S = {S:.1f}",
+                          annotation_position="top",
+                          annotation_font=dict(color="white", size=12))
         
         display_title = METRICS_LABELS.get(title, title)
         fig.update_layout(title=display_title, xaxis_title="Strike Price", yaxis_title="Value",
@@ -1259,6 +1343,11 @@ def multi_date_page(symbol):
         fig.update_xaxes(gridcolor='gray', rangeslider=dict(visible=True), range=x_range)
         fig.update_yaxes(gridcolor='gray')
         st.plotly_chart(fig, use_container_width=True)
+
+
+# ============================================================
+# التطبيق الرئيسي
+# ============================================================
 
 def main():
     if "show_visitors" not in st.session_state:
@@ -1286,6 +1375,22 @@ def main():
             index=0
         )
         st.caption(f"Analyzing: {symbol}")
+
+    # عرض وقت آخر تحديث للبيانات
+    metadata = get_options_metadata()
+    if metadata["last_updated"] != "Unknown":
+        try:
+            last_update = datetime.datetime.fromisoformat(metadata["last_updated"])
+            time_diff = datetime.datetime.now() - last_update
+            minutes_ago = int(time_diff.total_seconds() / 60)
+            
+            if minutes_ago < 60:
+                st.info(f"Data last updated: {minutes_ago} minutes ago ({last_update.strftime('%H:%M')})")
+            else:
+                hours_ago = minutes_ago // 60
+                st.warning(f"Data last updated: {hours_ago} hours ago ({last_update.strftime('%H:%M')})")
+        except:
+            st.info(f"Last updated: {metadata['last_updated']}")
 
     st.divider()
 
@@ -1318,6 +1423,7 @@ def main():
             display_visitor_widget()
         else:
             st.caption("Table hidden. Click Show to display.")
+
 
 if __name__ == "__main__":
     main()
