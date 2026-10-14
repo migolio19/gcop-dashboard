@@ -39,13 +39,8 @@ VISITOR_FILE = "visitors_log.json"
 DATA_FILE = "options_data.json"
 
 
-# ============================================================
-# دوال قراءة البيانات من ملف JSON (بدلاً من Yahoo Finance)
-# ============================================================
-
 @st.cache_data(ttl=60)
 def get_options_metadata():
-    """قراءة معلومات عامة عن آخر تحديث للبيانات."""
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -59,7 +54,6 @@ def get_options_metadata():
 
 @st.cache_data(ttl=60)
 def get_available_expirations(symbol):
-    """قراءة تواريخ الانتهاء المتاحة لرمز معين."""
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -72,7 +66,6 @@ def get_available_expirations(symbol):
 
 @st.cache_data(ttl=60)
 def get_current_price(symbol):
-    """قراءة السعر الحالي لرمز معين."""
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -85,7 +78,6 @@ def get_current_price(symbol):
 
 @st.cache_data(ttl=60)
 def fetch_options_data(symbol, expiration_date=None):
-    """قراءة بيانات الخيارات من ملف JSON."""
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -131,10 +123,6 @@ def fetch_options_data(symbol, expiration_date=None):
     
     return current_price, expiration_date, df, T
 
-
-# ============================================================
-# نظام تتبع الزوار
-# ============================================================
 
 def get_visitor_ip_and_country():
     try:
@@ -194,23 +182,23 @@ def display_visitor_widget():
     total_visitors = len(logs)
     
     if total_visitors == 0:
-        st.info("No visitors in the last 24 hours.")
+        st.info("لا يوجد زوار في الـ 24 ساعة الماضية.")
         return
     
     data = []
     for log in logs:
         dt = datetime.datetime.fromtimestamp(log['timestamp']).strftime('%Y-%m-%d %I:%M %p')
         data.append({
-            'User': log.get('username', 'visitor'),
-            'Country': log['country'],
-            'Last Seen': dt
+            'المستخدم': log.get('username', 'visitor'),
+            'الدولة': log['country'],
+            'آخر ظهور': dt
         })
     
     df_visitors = pd.DataFrame(data)
     
     col1, col2 = st.columns([1, 3])
     with col1:
-        st.metric("Unique Visitors (24h)", total_visitors)
+        st.metric("زوار فريدون (24 ساعة)", total_visitors)
     with col2:
         st.dataframe(
             df_visitors,
@@ -219,10 +207,6 @@ def display_visitor_widget():
             height=min(200, 35 + 35 * total_visitors)
         )
 
-
-# ============================================================
-# صفحة تسجيل الدخول
-# ============================================================
 
 def login_page():
     st.markdown("""
@@ -248,16 +232,12 @@ def login_page():
                 if username in CREDENTIALS and CREDENTIALS[username] == password:
                     st.session_state.logged_in = True
                     st.session_state.username = username
-                    st.success(f"Welcome, {username}")
+                    st.success(f"مرحباً، {username}")
                     time.sleep(0.5)
                     st.rerun()
                 else:
-                    st.error("Invalid username or password")
+                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
-
-# ============================================================
-# حالة السوق
-# ============================================================
 
 def get_market_status():
     now_utc = datetime.datetime.now(datetime.timezone.utc)
@@ -294,10 +274,6 @@ def should_autorefresh():
         else:
             return True
 
-
-# ============================================================
-# دوال بلاك-شولز
-# ============================================================
 
 def d1(S, K, T, r, sigma, q=0.0):
     return (np.log(S / K) + (r - q + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
@@ -365,10 +341,6 @@ def speed(S, K, T, r, sigma, q=0.0):
     return -g * (d1_val / (sigma * np.sqrt(T)) + 1) / S
 
 
-# ============================================================
-# GEX History
-# ============================================================
-
 class GEXHistory:
     def __init__(self, max_minutes=60):
         self.max_minutes = max_minutes
@@ -398,10 +370,6 @@ class GEXHistory:
 if 'gex_history' not in st.session_state:
     st.session_state.gex_history = GEXHistory(max_minutes=120)
 
-
-# ============================================================
-# حساب IV Skew وصفر غاما ومناطق التقاء
-# ============================================================
 
 def calculate_iv_skew(df, S, settings):
     call_pct = settings.get('iv_skew_call_pct', 1.15)
@@ -476,10 +444,6 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     
     return zones
 
-
-# ============================================================
-# دوال الرسم
-# ============================================================
 
 def plot_metric_single(df, S, call_col, put_col, title, y_axis, 
                        call_color='limegreen', put_color='crimson', x_range=None,
@@ -659,39 +623,35 @@ def plot_cumulative_delta(df, S, x_col, y_col, title, y_axis, line_color='deepsk
     return fig
 
 
-# ============================================================
-# صفحة التحليل
-# ============================================================
-
 def single_date_page(symbol):
     today = datetime.datetime.now().strftime("%Y-%m-%d")
-    st.header("Single Expiration Analysis")
-    st.caption(f"Date: {today}")
+    st.header("تحليل تاريخ انتهاء واحد")
+    st.caption(f"التاريخ: {today}")
 
     current_price, expiration_date, df, T = fetch_options_data(symbol)
     if df is None:
-        st.error(f"No options data for {symbol}.")
+        st.error(f"لا توجد بيانات خيارات للرمز {symbol}.")
         return
 
     S = current_price
     q = 0.0
 
     with st.sidebar:
-        st.markdown("## Settings")
-        r = st.slider("Risk-free rate (r)", 0.0, 0.2, 0.05, 0.005)
+        st.markdown("## الإعدادات")
+        r = st.slider("سعر الفائدة الخالي من المخاطر (r)", 0.0, 0.2, 0.05, 0.005)
         
         st.divider()
-        st.markdown("### Advanced Settings")
+        st.markdown("### إعدادات متقدمة")
         
-        iv_call_pct = st.slider("IV Call % of Price", 1.05, 1.30, 1.15, 0.01, key="iv_call_pct")
-        iv_put_pct = st.slider("IV Put % of Price", 0.70, 0.95, 0.85, 0.01, key="iv_put_pct")
-        sma_period = st.slider("SMA Period for IV Skew", 5, 50, 20, 1, key="sma_period")
-        dev_threshold = st.slider("IV Skew Deviation Threshold", 0.05, 0.50, 0.20, 0.01, key="dev_threshold")
+        iv_call_pct = st.slider("IV Call % من السعر", 1.05, 1.30, 1.15, 0.01, key="iv_call_pct")
+        iv_put_pct = st.slider("IV Put % من السعر", 0.70, 0.95, 0.85, 0.01, key="iv_put_pct")
+        sma_period = st.slider("فترة SMA لـ IV Skew", 5, 50, 20, 1, key="sma_period")
+        dev_threshold = st.slider("عتبة انحراف IV Skew", 0.05, 0.50, 0.20, 0.01, key="dev_threshold")
         
         st.divider()
         
         confluence_pct = st.slider(
-            "Confluence Threshold %",
+            "عتبة التقاء غاما/فانا %",
             0.10, 0.60, 0.30, 0.01,
             key="confluence_pct"
         )
@@ -699,7 +659,7 @@ def single_date_page(symbol):
         st.divider()
         
         taha_confluence_pct = st.slider(
-            "Confluence Threshold for Taha %",
+            "عتبة التقاء غاما/فانا لـ طه %",
             0.10, 0.60, 0.30, 0.01,
             key="taha_confluence_pct"
         )
@@ -708,33 +668,33 @@ def single_date_page(symbol):
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Quick Refresh", width="stretch"):
+            if st.button("تحديث سريع", width="stretch"):
                 st.cache_data.clear()
                 st.rerun()
         with col2:
-            if st.button("Force Refresh", width="stretch"):
+            if st.button("تحديث قسري", width="stretch"):
                 st.cache_data.clear()
                 st.rerun()
 
         if current_price is not None:
             status, _ = get_market_status()
-            market_status = "Open" if status == "open" else "Closed"
-            st.metric("Current Price", f"${current_price:.2f}", delta=market_status)
-            st.markdown(f"**Expiration Date:** `{expiration_date}`")
-            st.caption(f"Last Update: {datetime.datetime.now().strftime('%I:%M:%S %p')}") 
+            market_status = "مفتوح" if status == "open" else "مغلق"
+            st.metric("السعر الحالي", f"${current_price:.2f}", delta=market_status)
+            st.markdown(f"**تاريخ الانتهاء:** `{expiration_date}`")
+            st.caption(f"آخر تحديث: {datetime.datetime.now().strftime('%I:%M:%S %p')}") 
         
         st.divider()
         
         min_strike = int(df['strike'].min())
         max_strike = int(df['strike'].max())
         strike_range = st.slider(
-            "Strike Range",
+            "نطاق أسعار التنفيذ",
             min_value=min_strike,
             max_value=max_strike,
             value=(min_strike, max_strike),
             step=5
         )
-        st.caption("Enable the lock icon below each chart to freeze the range.")
+        st.caption("قم بتفعيل زر القفل أسفل كل رسم بياني لتثبيت النطاق.")
 
     settings = {
         'iv_skew_call_pct': iv_call_pct,
@@ -749,7 +709,7 @@ def single_date_page(symbol):
     df_sorted = df_filtered.sort_values('strike').reset_index(drop=True)
 
     if df_sorted.empty:
-        st.warning("No data in the selected range.")
+        st.warning("لا توجد بيانات في النطاق المحدد.")
         return
 
     sigma = np.maximum(df_sorted['weighted_IV'].values, 0.001)
@@ -834,66 +794,66 @@ def single_date_page(symbol):
     gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
 
     st.divider()
-    st.subheader("Zero-Gamma Indicators - for Gamma Gold")
+    st.subheader("🎯 مؤشرات صفر غاما (Zero-Gamma) - لـ Gamma Gold")
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Zero-Gamma Level", f"${zero_gamma_level:.2f}")
+        st.metric("📍 مستوى صفر غاما", f"${zero_gamma_level:.2f}")
     with col2:
-        st.metric("Distance from Price", f"${distance_to_zero_gamma:.2f}", 
+        st.metric("📏 المسافة من السعر", f"${distance_to_zero_gamma:.2f}", 
                   delta=f"{distance_to_zero_gamma:.2f}")
     with col3:
-        st.metric("Signal", setup_signal)
+        st.metric("📈 الإشارة", setup_signal)
     with col4:
-        st.metric("GEX Flow", f"{gex_flow:+.0f}",
+        st.metric("🌊 تدفق غاما (GEX Flow)", f"{gex_flow:+.0f}",
                   delta=f"{gex_flow:+.0f}", 
                   delta_color="normal")
 
     if zones:
         st.divider()
-        st.subheader("Confluence Zones - for Gamma Gold")
+        st.subheader("📍 مناطق التقاء غاما وفانا (Confluence Zones) - لـ Gamma Gold")
         
         squeeze_zones = [z for z in zones if z['type'] == 'squeeze']
         meltdown_zones = [z for z in zones if z['type'] == 'meltdown']
         
         if squeeze_zones:
             squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
-            st.success(f"Squeeze Zones (Bullish) at: {squeeze_str}")
+            st.success(f"💥 مناطق Squeeze (صاعد) عند: {squeeze_str}")
         if meltdown_zones:
             meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
-            st.error(f"Meltdown Zones (Bearish) at: {meltdown_str}")
+            st.error(f"⬇️ مناطق Meltdown (هابط) عند: {meltdown_str}")
         
         for zone in zones:
             if zone['type'] == 'squeeze' and S <= zero_gamma_level:
-                st.warning(f"Squeeze at ${zone['strike']:.2f} not active (price below Zero-Gamma)")
+                st.warning(f"⚠️ Squeeze عند ${zone['strike']:.2f} غير مفعّل (السعر تحت صفر غاما)")
             if zone['type'] == 'meltdown' and S >= zero_gamma_level:
-                st.warning(f"Meltdown at ${zone['strike']:.2f} not active (price above Zero-Gamma)")
+                st.warning(f"⚠️ Meltdown عند ${zone['strike']:.2f} غير مفعّل (السعر فوق صفر غاما)")
 
     st.divider()
-    st.subheader("IV Skew Indicator")
+    st.subheader("📉 مؤشر انحراف التقلب (IV Skew)")
 
     fig_skew = plot_iv_skew(skew_history, sma_history, skew_value, sma_value, deviation)
     st.plotly_chart(fig_skew, use_container_width=True)
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Current IV Skew", f"{skew_value:.4f}")
+        st.metric("📊 IV Skew الحالي", f"{skew_value:.4f}")
     with col2:
-        st.metric("SMA 20", f"{sma_value:.4f}")
+        st.metric("📈 المتوسط (SMA 20)", f"{sma_value:.4f}")
     with col3:
         deviation_pct = deviation * 100
-        st.metric("Deviation from SMA", f"{deviation_pct:.2f}%",
+        st.metric("📉 الانحراف عن المتوسط", f"{deviation_pct:.2f}%",
                   delta=f"{deviation_pct:.2f}%",
                   delta_color="inverse" if abs(deviation) > 0.20 else "off")
     with col4:
-        st.metric("Deviation Status", "Abnormal" if abs(deviation) > 0.20 else "Normal")
+        st.metric("🎯 حالة الانحراف", "⚠️ غير طبيعي" if abs(deviation) > 0.20 else "✅ طبيعي")
 
-    with st.expander("IV Skew Details"):
-        st.write(f"**Call Strike ({settings['iv_skew_call_pct']:.0%}):** ${call_strike:.2f} - IV: {call_iv:.4f}")
-        st.write(f"**Put Strike ({settings['iv_skew_put_pct']:.0%}):** ${put_strike:.2f} - IV: {put_iv:.4f}")
+    with st.expander("📊 تفاصيل IV Skew"):
+        st.write(f"**سعر تنفيذ Call ({settings['iv_skew_call_pct']:.0%}):** ${call_strike:.2f} - IV: {call_iv:.4f}")
+        st.write(f"**سعر تنفيذ Put ({settings['iv_skew_put_pct']:.0%}):** ${put_strike:.2f} - IV: {put_iv:.4f}")
         st.write(f"**Skew:** {skew_value:.4f}")
         st.write(f"**SMA {settings['iv_sma_period']}:** {sma_value:.4f}")
-        st.write(f"**Deviation:** {deviation:.2%}")
+        st.write(f"**الانحراف:** {deviation:.2%}")
 
     metrics = [
         ('openInterest_call_display', 'openInterest_put_display', 'Open Interest', 'Contracts'),
@@ -944,7 +904,7 @@ def single_date_page(symbol):
             st.plotly_chart(fig, use_container_width=True, key=f"chart_{title}")
         with col_freeze:
             st.write("")
-            frozen = st.checkbox("Lock", key=f"freeze_{title}", value=st.session_state.get(f"freeze_{title}", False))
+            frozen = st.checkbox("قفل", key=f"freeze_{title}", value=st.session_state.get(f"freeze_{title}", False))
             if frozen:
                 any_frozen = True
 
@@ -966,12 +926,12 @@ def single_date_page(symbol):
 
     col_btn, col_title = st.columns([0.15, 0.85])
     with col_btn:
-        label = "Hide" if st.session_state.show_cum_delta else "Show"
+        label = "إخفاء" if st.session_state.show_cum_delta else "إظهار"
         if st.button(label, key="toggle_cum_delta"):
             st.session_state.show_cum_delta = not st.session_state.show_cum_delta
             st.rerun()
     with col_title:
-        st.write("### Cumulative Delta Exposure")
+        st.write("### 📊 الدلتا التراكمي (Cumulative Delta Exposure)")
 
     if st.session_state.show_cum_delta:
         fig_cum = plot_cumulative_delta(
@@ -984,10 +944,10 @@ def single_date_page(symbol):
         )
         st.plotly_chart(fig_cum, use_container_width=True)
     else:
-        st.caption("Indicator hidden. Click Show to display.")
+        st.caption("🔒 المؤشر مخفي. اضغط على زر 'إظهار' لعرضه.")
 
     st.divider()
-    st.subheader("Options Inventory - Net Contracts")
+    st.subheader("📋 قائمة الخيارات - صافي العقود")
 
     df_inventory = df_sorted.copy()
     df_inventory['Net_Contracts'] = df_inventory['openInterest_call'] - df_inventory['openInterest_put']
@@ -1056,16 +1016,16 @@ def single_date_page(symbol):
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total OI (Calls)", f"{total_oi_calls:,.0f}")
+        st.metric("إجمالي OI (Calls)", f"{total_oi_calls:,.0f}")
     with col2:
-        st.metric("Total OI (Puts)", f"{total_oi_puts:,.0f}")
+        st.metric("إجمالي OI (Puts)", f"{total_oi_puts:,.0f}")
     with col3:
-        st.metric("Net Contracts Total", f"{total_net:+,.0f}")
+        st.metric("صافي العقود الكلي", f"{total_net:+,.0f}")
     with col4:
-        st.metric("Current Price", f"${S:.2f}")
+        st.metric("السعر الحالي", f"${S:.2f}")
 
     st.divider()
-    st.subheader("Gamma Taha + Vanna Exposure + Confluence Zones")
+    st.subheader("⚡ قوة الدفع طه + Vanna + مناطق التقاء")
 
     threshold_taha = settings['taha_confluence_pct']
     max_gamma_abs = df_sorted['net_gamma'].abs().max()
@@ -1185,29 +1145,29 @@ def single_date_page(symbol):
 
     if taha_zones:
         st.divider()
-        st.subheader("Confluence Zones - for Taha")
+        st.subheader("📍 مناطق التقاء غاما وفانا (Confluence Zones) - لـ طه")
         
         squeeze_zones = [z for z in taha_zones if z['type'] == 'squeeze']
         meltdown_zones = [z for z in taha_zones if z['type'] == 'meltdown']
         
         if squeeze_zones:
             squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
-            st.success(f"Squeeze Zones at: {squeeze_str}")
+            st.success(f"💥 مناطق Squeeze عند: {squeeze_str}")
         if meltdown_zones:
             meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
-            st.error(f"Meltdown Zones at: {meltdown_str}")
+            st.error(f"⬇️ مناطق Meltdown عند: {meltdown_str}")
         
         for zone in taha_zones:
             st.caption(
-                f"At ${zone['strike']:.2f}: "
-                f"Gamma = {zone['gamma_ratio']:.2%} of Max, "
-                f"Vanna = {zone['vanna_ratio']:.2%} of Max"
+                f"عند ${zone['strike']:.2f}: "
+                f"جاما = {zone['gamma_ratio']:.2%} من Max، "
+                f"فانا = {zone['vanna_ratio']:.2%} من Max"
             )
 
     st.divider()
     csv_data_all = df_sorted.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="Download All Data CSV",
+        label="تحميل جميع البيانات CSV",
         data=csv_data_all,
         file_name=f'{symbol}_options_{expiration_date}.csv',
         mime='text/csv',
@@ -1217,44 +1177,44 @@ def single_date_page(symbol):
     if should_autorefresh():
         st_autorefresh(interval=30 * 1000, key="auto_normal")
     else:
-        st.caption("Auto-refresh paused (outside market hours).")
+        st.caption("التحديث التلقائي متوقف (خارج ساعات السوق).")
 
 
 def multi_date_page(symbol):
-    st.header("Compare Different Expiration Dates")
+    st.header("مقارنة تواريخ انتهاء متعددة")
 
     with st.sidebar:
-        r = st.slider("Risk-free rate (r)", 0.0, 0.2, 0.05, 0.005, key="r_multi")
+        r = st.slider("سعر الفائدة (r)", 0.0, 0.2, 0.05, 0.005, key="r_multi")
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Quick Refresh", key="refresh_multi_quick", width="stretch"):
+            if st.button("تحديث سريع", key="refresh_multi_quick", width="stretch"):
                 st.cache_data.clear()
                 st.rerun()
         with col2:
-            if st.button("Force Refresh", key="refresh_multi_force", width="stretch"):
+            if st.button("تحديث قسري", key="refresh_multi_force", width="stretch"):
                 st.cache_data.clear()
                 st.rerun()
         
         current_price = get_current_price(symbol)
         
         status, _ = get_market_status()
-        market_status = "Open" if status == "open" else "Closed"
+        market_status = "مفتوح" if status == "open" else "مغلق"
         if current_price:
-            st.metric("Current Price", f"${current_price:.2f}", delta=market_status)
+            st.metric("السعر الحالي", f"${current_price:.2f}", delta=market_status)
         st.caption(f"{datetime.datetime.now().strftime('%I:%M:%S %p')}")
 
     all_exps = get_available_expirations(symbol)
     if not all_exps:
-        st.error("No expiration dates available.")
+        st.error("لا توجد تواريخ انتهاء متاحة.")
         return
 
-    selected_exps = st.multiselect("Select expiration dates (max 5)", all_exps,
+    selected_exps = st.multiselect("اختر تواريخ الانتهاء (حد أقصى 5)", all_exps,
                                    default=all_exps[:2] if len(all_exps) >= 2 else all_exps,
                                    max_selections=5)
 
     if not selected_exps:
-        st.warning("Please select at least one date.")
+        st.warning("اختر تاريخاً واحداً على الأقل.")
         return
 
     dfs = {}
@@ -1345,10 +1305,6 @@ def multi_date_page(symbol):
         st.plotly_chart(fig, use_container_width=True)
 
 
-# ============================================================
-# التطبيق الرئيسي
-# ============================================================
-
 def main():
     if "show_visitors" not in st.session_state:
         st.session_state.show_visitors = False
@@ -1359,7 +1315,7 @@ def main():
 
     with st.sidebar:
         st.divider()
-        if st.button("Logout", width="stretch"):
+        if st.button("تسجيل الخروج", width="stretch"):
             st.session_state.logged_in = False
             st.session_state.username = ""
             st.rerun()
@@ -1367,16 +1323,15 @@ def main():
     col_title, col_selector = st.columns([2, 1])
     with col_title:
         st.title("Quantitative Options Radar")
-        st.caption(f"Welcome, {st.session_state.username}")
+        st.caption(f"مرحباً، {st.session_state.username}")
     with col_selector:
         symbol = st.selectbox(
-            "Select Symbol",
+            "اختر الرمز",
             ["GLD", "SPY", "SPX", "QQQ", "NDX"],
             index=0
         )
-        st.caption(f"Analyzing: {symbol}")
+        st.caption(f"تحليل: {symbol}")
 
-    # عرض وقت آخر تحديث للبيانات
     metadata = get_options_metadata()
     if metadata["last_updated"] != "Unknown":
         try:
@@ -1385,21 +1340,21 @@ def main():
             minutes_ago = int(time_diff.total_seconds() / 60)
             
             if minutes_ago < 60:
-                st.info(f"Data last updated: {minutes_ago} minutes ago ({last_update.strftime('%H:%M')})")
+                st.info(f"آخر تحديث للبيانات: قبل {minutes_ago} دقيقة ({last_update.strftime('%H:%M')})")
             else:
                 hours_ago = minutes_ago // 60
-                st.warning(f"Data last updated: {hours_ago} hours ago ({last_update.strftime('%H:%M')})")
+                st.warning(f"آخر تحديث للبيانات: قبل {hours_ago} ساعة ({last_update.strftime('%H:%M')})")
         except:
-            st.info(f"Last updated: {metadata['last_updated']}")
+            st.info(f"آخر تحديث: {metadata['last_updated']}")
 
     st.divider()
 
     page = st.sidebar.radio(
-        "Select Page",
-        ["Single Expiration", "Compare Dates"]
+        "اختر الصفحة",
+        ["تحليل تاريخ انتهاء واحد", "مقارنة تواريخ متعددة"]
     )
 
-    if page == "Single Expiration":
+    if page == "تحليل تاريخ انتهاء واحد":
         single_date_page(symbol)
     else:
         multi_date_page(symbol)
@@ -1411,18 +1366,18 @@ def main():
         
         col_btn, col_title_bloc = st.columns([0.2, 0.8])
         with col_btn:
-            label = "Hide" if st.session_state.show_visitors else "Show"
+            label = "إخفاء" if st.session_state.show_visitors else "إظهار"
             if st.button(label, width="stretch"):
                 st.session_state.show_visitors = not st.session_state.show_visitors
                 st.rerun()
         
         with col_title_bloc:
-            st.subheader("Visitor Statistics (Last 24h)")
+            st.subheader("👥 إحصائيات الزوار (آخر 24 ساعة)")
         
         if st.session_state.show_visitors:
             display_visitor_widget()
         else:
-            st.caption("Table hidden. Click Show to display.")
+            st.caption("🔒 الجدول مخفي. اضغط على زر 'إظهار' لعرضه.")
 
 
 if __name__ == "__main__":
