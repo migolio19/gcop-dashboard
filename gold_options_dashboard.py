@@ -472,7 +472,11 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     positions = [0.125, 0.375, 0.625, 0.875]
     titles = ["📍 مستوى صفر غاما", "📏 المسافة من السعر", "📈 الإشارة", "🌊 تدفق غاما"]
     values = [f"${zero_gamma_level:.2f}", f"${distance_to_zero_gamma:.2f}", setup_signal, f"{gex_flow:+.0f}"]
-    colors = ["white", "white", "white", "limegreen" if gex_flow > 0 else "crimson"]
+    
+    # ✅ التعديل: تحديد لون الإشارة بناءً على نوع الإعداد
+    signal_color = "limegreen" if setup_signal == "Bullish Setup" else "crimson"
+    
+    colors = ["white", "white", signal_color, "limegreen" if gex_flow > 0 else "crimson"]
     
     for pos, title, value, color in zip(positions, titles, values, colors):
         fig.add_annotation(
