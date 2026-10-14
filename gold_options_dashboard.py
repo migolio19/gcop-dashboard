@@ -34,7 +34,7 @@ METRICS_LABELS = {
     "IV Skew": "انحراف التقلب (IV Skew)",
 }
 
-# ============ الإعدادات المتقدمة الثابتة (كانت في الـ sidebar) ============
+# ============ الإعدادات المتقدمة الثابتة ============
 DEFAULT_SETTINGS = {
     'iv_skew_call_pct': 1.15,
     'iv_skew_put_pct': 0.85,
@@ -470,7 +470,7 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         xref="paper", yref="paper"
     )
     
-    # ============ جدول الإعدادات المتقدمة (بدون شريط خلفي) ============
+    # ============ جدول الإعدادات المتقدمة ============
     fig.add_annotation(
         x=0.5, y=0.945,
         text="<b>⚙️ الإعدادات المتقدمة</b>",
@@ -835,7 +835,6 @@ def single_date_page(symbol):
         )
         st.caption("قم بتفعيل زر القفل أسفل كل رسم بياني لتثبيت النطاق.")
 
-    # ✅ الإعدادات ثابتة الآن (كانت في الـ sidebar)
     settings = DEFAULT_SETTINGS.copy()
 
     df_filtered = df[(df['strike'] >= strike_range[0]) & (df['strike'] <= strike_range[1])].copy()
@@ -1042,6 +1041,9 @@ def single_date_page(symbol):
     else:
         st.caption("🔒 المؤشر مخفي. اضغط على زر 'إظهار' لعرضه.")
 
+    # ================================================================
+    # ============ قسم موحّد: Net Options Positions + الأرقام ============
+    # ================================================================
     st.divider()
     st.subheader("📋 قائمة الخيارات - صافي العقود")
 
@@ -1077,7 +1079,7 @@ def single_date_page(symbol):
                       annotation_text=f"S = {S:.2f}",
                       annotation_position="top",
                       annotation_font=dict(color="yellow", size=12))
-    
+
     min_s = df_inventory['strike'].min()
     max_s = df_inventory['strike'].max()
     if S < min_s:
@@ -1087,6 +1089,11 @@ def single_date_page(symbol):
     center = S
     half_range = max(center - min_s, max_s - center) * 1.2
     x_range_inv = (center - half_range, center + half_range)
+
+    # ============ الإحصائيات ============
+    total_oi_calls = df_inventory['openInterest_call'].sum()
+    total_oi_puts = df_inventory['openInterest_put'].sum()
+    total_net = total_oi_calls - total_oi_puts
 
     fig_inv.update_layout(
         title=f"Net Options Positions - {symbol} - {expiration_date}",
@@ -1098,27 +1105,49 @@ def single_date_page(symbol):
         hovermode="x unified",
         barmode='relative',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        height=600,
-        margin=dict(l=10, r=10, t=40, b=40)
+        height=800,
+        margin=dict(l=10, r=10, t=40, b=200)
     )
     fig_inv.update_xaxes(gridcolor='gray', rangeslider=dict(visible=True), range=x_range_inv)
     fig_inv.update_yaxes(gridcolor='gray', zeroline=True, zerolinecolor='white')
 
-    st.plotly_chart(fig_inv, use_container_width=True)
+    # ============ إضافة الإحصائيات داخل الرسم ============
+    fig_inv.add_shape(
+        type="line",
+        x0=0.02, x1=0.98, y0=-0.06, y1=-0.06,
+        line=dict(color="#444", width=1),
+        xref="paper", yref="paper"
+    )
 
-    total_oi_calls = df_inventory['openInterest_call'].sum()
-    total_oi_puts = df_inventory['openInterest_put'].sum()
-    total_net = total_oi_calls - total_oi_puts
+    metric_positions = [0.125, 0.375, 0.625, 0.875]
+    metric_labels = ["إجمالي OI (Calls)", "إجمالي OI (Puts)", "صافي العقود الكلي", "السعر الحالي"]
+    metric_values = [
+        f"{total_oi_calls:,.0f}",
+        f"{total_oi_puts:,.0f}",
+        f"{total_net:+,.0f}",
+        f"${S:.2f}"
+    ]
+    net_color = "limegreen" if total_net > 0 else "crimson"
+    metric_colors = ["white", "white", net_color, "white"]
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("إجمالي OI (Calls)", f"{total_oi_calls:,.0f}")
-    with col2:
-        st.metric("إجمالي OI (Puts)", f"{total_oi_puts:,.0f}")
-    with col3:
-        st.metric("صافي العقود الكلي", f"{total_net:+,.0f}")
-    with col4:
-        st.metric("السعر الحالي", f"${S:.2f}")
+    for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
+        fig_inv.add_annotation(
+            x=pos, y=-0.13,
+            text=f"<b>{label}</b>",
+            showarrow=False,
+            font=dict(color="#9aa0a6", size=13),
+            xref="paper", yref="paper"
+        )
+        fig_inv.add_annotation(
+            x=pos, y=-0.24,
+            text=f"<b>{value}</b>",
+            showarrow=False,
+            font=dict(color=color, size=26),
+            xref="paper", yref="paper"
+        )
+
+    st.plotly_chart(fig_inv, use_container_width=True, key="chart_inventory")
+    st.caption("💡 لحفظ الرسم + الإحصائيات كصورة PNG واحدة، اضغط على أيقونة الكاميرا 📷 أعلى الرسم.")
 
     st.divider()
     csv_data_all = df_sorted.to_csv(index=False).encode('utf-8')
