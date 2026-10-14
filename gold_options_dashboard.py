@@ -34,7 +34,6 @@ METRICS_LABELS = {
     "IV Skew": "انحراف التقلب (IV Skew)",
 }
 
-# ============ الإعدادات المتقدمة الثابتة ============
 DEFAULT_SETTINGS = {
     'iv_skew_call_pct': 1.15,
     'iv_skew_put_pct': 0.85,
@@ -461,7 +460,6 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     fig.update_xaxes(visible=False, range=[0, 1])
     fig.update_yaxes(visible=False, range=[0, 1])
     
-    # ============ عنوان تاريخ الانتهاء ============
     fig.add_annotation(
         x=0.5, y=0.99,
         text=f"<b>📅 تاريخ الانتهاء: {expiration_date}</b>",
@@ -470,7 +468,6 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         xref="paper", yref="paper"
     )
     
-    # ============ جدول الإعدادات المتقدمة ============
     fig.add_annotation(
         x=0.5, y=0.945,
         text="<b>⚙️ الإعدادات المتقدمة</b>",
@@ -505,14 +502,12 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
             xref="paper", yref="paper"
         )
     
-    # خط فاصل بعد الإعدادات
     fig.add_shape(
         type="line",
         x0=0.05, x1=0.95, y0=0.815, y1=0.815,
         line=dict(color="#333", width=1)
     )
     
-    # ============ القسم العلوي: Zero-Gamma ============
     fig.add_annotation(
         x=0.5, y=0.78,
         text="<b>🎯 مؤشرات صفر غاما (Zero-Gamma)</b>",
@@ -525,7 +520,6 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     titles = ["📍 مستوى صفر غاما", "📏 المسافة من السعر", "📈 الإشارة", "🌊 تدفق غاما"]
     values = [f"${zero_gamma_level:.2f}", f"${distance_to_zero_gamma:.2f}", setup_signal, f"{gex_flow:+.0f}"]
     
-    # ✅ الإشارة: Bullish = أخضر / Bearish = أحمر
     signal_color = "limegreen" if setup_signal == "Bullish Setup" else "crimson"
     colors = ["white", "white", signal_color, "limegreen" if gex_flow > 0 else "crimson"]
     
@@ -545,14 +539,12 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
             xref="paper", yref="paper"
         )
     
-    # خط فاصل
     fig.add_shape(
         type="line",
         x0=0.05, x1=0.95, y0=0.52, y1=0.52,
         line=dict(color="#444", width=1)
     )
     
-    # ============ القسم السفلي: Confluence Zones ============
     fig.add_annotation(
         x=0.5, y=0.46,
         text="<b>📍 مناطق التقاء غاما وفانا (Confluence Zones)</b>",
@@ -923,7 +915,6 @@ def single_date_page(symbol):
     gex_60min_ago = st.session_state.gex_history.get_60min_ago()
     gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
 
-    # ============ رسم موحّد ============
     st.divider()
     st.caption("💡 لحفظ الرسم كصورة PNG، اضغط على أيقونة الكاميرا 📷 أعلى الرسم.")
     
@@ -1109,23 +1100,23 @@ def single_date_page(symbol):
         barmode='relative',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                     font=dict(color="white")),
-        height=800,
-        margin=dict(l=60, r=20, t=50, b=180)
+        height=850,
+        margin=dict(l=60, r=20, t=50, b=230)
     )
 
-    # ✅ إخفاء شريط التمرير لمنع التداخل مع الأرقام
+    # ✅ إرجاع شريط التمرير
     fig_inv.update_xaxes(
         gridcolor='gray',
-        rangeslider=dict(visible=False),
+        rangeslider=dict(visible=True, thickness=0.08),
         range=x_range_inv,
         showticklabels=True
     )
     fig_inv.update_yaxes(gridcolor='gray', zeroline=True, zerolinecolor='white')
 
-    # ============ خط فاصل + الأرقام أسفل الشارت ============
+    # ============ خط فاصل + الأرقام أسفل شريط التمرير ============
     fig_inv.add_shape(
         type="line",
-        x0=0.02, x1=0.98, y0=-0.14, y1=-0.14,
+        x0=0.02, x1=0.98, y0=-0.20, y1=-0.20,
         line=dict(color="#555", width=1),
         xref="paper", yref="paper"
     )
@@ -1143,17 +1134,17 @@ def single_date_page(symbol):
 
     for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
         fig_inv.add_annotation(
-            x=pos, y=-0.20,
+            x=pos, y=-0.245,
             text=f"<b>{label}</b>",
             showarrow=False,
             font=dict(color="#9aa0a6", size=13),
             xref="paper", yref="paper"
         )
         fig_inv.add_annotation(
-            x=pos, y=-0.32,
+            x=pos, y=-0.30,
             text=f"<b>{value}</b>",
             showarrow=False,
-            font=dict(color=color, size=26),
+            font=dict(color=color, size=28),
             xref="paper", yref="paper"
         )
 
