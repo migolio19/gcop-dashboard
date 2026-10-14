@@ -444,6 +444,105 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     return zones
 
 
+def create_zero_gamma_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow):
+    """إنشاء رسم Plotly لمؤشرات صفر غاما (قابل للحفظ كـ PNG)"""
+    fig = go.Figure()
+    
+    fig.update_xaxes(visible=False, range=[0, 1])
+    fig.update_yaxes(visible=False, range=[0, 1])
+    
+    positions = [0.125, 0.375, 0.625, 0.875]
+    
+    titles = ["📍 مستوى صفر غاما", "📏 المسافة من السعر", "📈 الإشارة", "🌊 تدفق غاما"]
+    values = [f"${zero_gamma_level:.2f}", f"${distance_to_zero_gamma:.2f}", setup_signal, f"{gex_flow:+.0f}"]
+    colors = ["white", "white", "white", "limegreen" if gex_flow > 0 else "crimson"]
+    
+    for pos, title, value, color in zip(positions, titles, values, colors):
+        fig.add_annotation(
+            x=pos, y=0.72,
+            text=f"<b>{title}</b>",
+            showarrow=False,
+            font=dict(color="white", size=12),
+            xref="paper", yref="paper"
+        )
+        fig.add_annotation(
+            x=pos, y=0.32,
+            text=f"<b>{value}</b>",
+            showarrow=False,
+            font=dict(color=color, size=22),
+            xref="paper", yref="paper"
+        )
+    
+    fig.update_layout(
+        plot_bgcolor="#111",
+        paper_bgcolor="#222",
+        height=170,
+        margin=dict(l=10, r=10, t=10, b=10),
+        showlegend=False
+    )
+    
+    return fig
+
+
+def create_confluence_zones_chart(zones, S, zero_gamma_level):
+    """إنشاء رسم Plotly لمناطق التقاء غاما وفانا (قابل للحفظ كـ PNG)"""
+    fig = go.Figure()
+    
+    fig.update_xaxes(visible=False, range=[0, 1])
+    fig.update_yaxes(visible=False, range=[0, 1])
+    
+    lines = []
+    colors = []
+    
+    if zones:
+        squeeze_zones = [z for z in zones if z['type'] == 'squeeze']
+        meltdown_zones = [z for z in zones if z['type'] == 'meltdown']
+        
+        if squeeze_zones:
+            squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
+            lines.append(f"💥 مناطق Squeeze (صاعد) عند: {squeeze_str}")
+            colors.append("limegreen")
+        
+        if meltdown_zones:
+            meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
+            lines.append(f"⬇️ مناطق Meltdown (هابط) عند: {meltdown_str}")
+            colors.append("crimson")
+        
+        for zone in zones:
+            if zone['type'] == 'squeeze' and S <= zero_gamma_level:
+                lines.append(f"⚠️ Squeeze عند ${zone['strike']:.2f} غير مفعّل (السعر تحت صفر غاما)")
+                colors.append("orange")
+            if zone['type'] == 'meltdown' and S >= zero_gamma_level:
+                lines.append(f"⚠️ Meltdown عند ${zone['strike']:.2f} غير مفعّل (السعر فوق صفر غاما)")
+                colors.append("orange")
+    
+    if not lines:
+        lines = ["لا توجد مناطق التقاء حالياً."]
+        colors = ["gray"]
+    
+    height = max(120, len(lines) * 45 + 30)
+    
+    for i, (line, color) in enumerate(zip(lines, colors)):
+        y_pos = 1 - (i + 0.5) / len(lines)
+        fig.add_annotation(
+            x=0.5, y=y_pos,
+            text=f"<b>{line}</b>",
+            showarrow=False,
+            font=dict(color=color, size=14),
+            xref="paper", yref="paper"
+        )
+    
+    fig.update_layout(
+        plot_bgcolor="#111",
+        paper_bgcolor="#222",
+        height=height,
+        margin=dict(l=10, r=10, t=10, b=10),
+        showlegend=False
+    )
+    
+    return fig
+
+
 def plot_metric_single(df, S, call_col, put_col, title, y_axis, 
                        call_color='limegreen', put_color='crimson', x_range=None,
                        zero_gamma_level=None, zones=None, gex_flow=None):
@@ -771,41 +870,22 @@ def single_date_page(symbol):
     gex_60min_ago = st.session_state.gex_history.get_60min_ago()
     gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
 
+    # ============ قسم Zero-Gamma (مع إمكانية حفظ PNG) ============
     st.divider()
     st.subheader("🎯 مؤشرات صفر غاما (Zero-Gamma) - لـ Gamma Gold")
+    
+    fig_zero_gamma = create_zero_gamma_chart(
+        zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow
+    )
+    st.plotly_chart(fig_zero_gamma, use_container_width=True, key="chart_zero_gamma")
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("📍 مستوى صفر غاما", f"${zero_gamma_level:.2f}")
-    with col2:
-        st.metric("📏 المسافة من السعر", f"${distance_to_zero_gamma:.2f}", 
-                  delta=f"{distance_to_zero_gamma:.2f}")
-    with col3:
-        st.metric("📈 الإشارة", setup_signal)
-    with col4:
-        st.metric("🌊 تدفق غاما (GEX Flow)", f"{gex_flow:+.0f}",
-                  delta=f"{gex_flow:+.0f}", 
-                  delta_color="normal")
-
+    # ============ قسم Confluence Zones (مع إمكانية حفظ PNG) ============
     if zones:
         st.divider()
         st.subheader("📍 مناطق التقاء غاما وفانا (Confluence Zones) - لـ Gamma Gold")
         
-        squeeze_zones = [z for z in zones if z['type'] == 'squeeze']
-        meltdown_zones = [z for z in zones if z['type'] == 'meltdown']
-        
-        if squeeze_zones:
-            squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
-            st.success(f"💥 مناطق Squeeze (صاعد) عند: {squeeze_str}")
-        if meltdown_zones:
-            meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
-            st.error(f"⬇️ مناطق Meltdown (هابط) عند: {meltdown_str}")
-        
-        for zone in zones:
-            if zone['type'] == 'squeeze' and S <= zero_gamma_level:
-                st.warning(f"⚠️ Squeeze عند ${zone['strike']:.2f} غير مفعّل (السعر تحت صفر غاما)")
-            if zone['type'] == 'meltdown' and S >= zero_gamma_level:
-                st.warning(f"⚠️ Meltdown عند ${zone['strike']:.2f} غير مفعّل (السعر فوق صفر غاما)")
+        fig_zones = create_confluence_zones_chart(zones, S, zero_gamma_level)
+        st.plotly_chart(fig_zones, use_container_width=True, key="chart_zones")
 
     st.divider()
     st.subheader("📉 مؤشر انحراف التقلب (IV Skew)")
@@ -833,7 +913,6 @@ def single_date_page(symbol):
         st.write(f"**SMA {settings['iv_sma_period']}:** {sma_value:.4f}")
         st.write(f"**الانحراف:** {deviation:.2%}")
 
-    # تم حذف Vanna Gold
     metrics = [
         ('openInterest_call_display', 'openInterest_put_display', 'Open Interest', 'Contracts'),
         ('call_gamma', 'put_gamma', 'Gamma Exposure', 'Gamma Exposure'),
@@ -993,8 +1072,6 @@ def single_date_page(symbol):
         st.metric("صافي العقود الكلي", f"{total_net:+,.0f}")
     with col4:
         st.metric("السعر الحالي", f"${S:.2f}")
-
-    # تم حذف قسم "قوة الدفع طه" بالكامل
 
     st.divider()
     csv_data_all = df_sorted.to_csv(index=False).encode('utf-8')
