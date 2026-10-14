@@ -34,6 +34,15 @@ METRICS_LABELS = {
     "IV Skew": "انحراف التقلب (IV Skew)",
 }
 
+# ============ الإعدادات المتقدمة الثابتة (كانت في الـ sidebar) ============
+DEFAULT_SETTINGS = {
+    'iv_skew_call_pct': 1.15,
+    'iv_skew_put_pct': 0.85,
+    'iv_sma_period': 20,
+    'iv_deviation_threshold': 0.20,
+    'confluence_pct': 0.30,
+}
+
 VISITOR_FILE = "visitors_log.json"
 DATA_FILE = "options_data.json"
 
@@ -444,8 +453,9 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     return zones
 
 
-def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow, zones, S, expiration_date):
-    """إنشاء رسم Plotly واحد يجمع Zero-Gamma و Confluence Zones (قابل للحفظ كـ PNG واحد)"""
+def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal,
+                          gex_flow, zones, S, expiration_date, settings):
+    """رسم موحّد: تاريخ الانتهاء + جدول الإعدادات المتقدمة + Zero-Gamma + Confluence Zones"""
     fig = go.Figure()
     
     fig.update_xaxes(visible=False, range=[0, 1])
@@ -460,12 +470,63 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         xref="paper", yref="paper"
     )
     
+    # ============ جدول الإعدادات المتقدمة (كانت في الـ sidebar) ============
+    fig.add_annotation(
+        x=0.5, y=0.945,
+        text="<b>⚙️ الإعدادات المتقدمة</b>",
+        showarrow=False,
+        font=dict(color="#00d4ff", size=14),
+        xref="paper", yref="paper"
+    )
+    
+    settings_items = [
+        ("IV Call %", f"{settings['iv_skew_call_pct']:.2f}"),
+        ("IV Put %", f"{settings['iv_skew_put_pct']:.2f}"),
+        ("SMA Period", f"{settings['iv_sma_period']}"),
+        ("IV Skew Dev", f"{settings['iv_deviation_threshold']:.2f}"),
+        ("Confluence %", f"{settings['confluence_pct']:.2f}"),
+    ]
+    
+    # مستطيل خلفي للجدول
+    fig.add_shape(
+        type="rect",
+        x0=0.03, x1=0.97, y0=0.845, y1=0.925,
+        fillcolor="rgba(0, 212, 255, 0.06)",
+        line=dict(color="#00d4ff", width=1),
+        xref="paper", yref="paper"
+    )
+    
+    positions_set = [0.12, 0.31, 0.50, 0.69, 0.88]
+    
+    for pos, (label, value) in zip(positions_set, settings_items):
+        fig.add_annotation(
+            x=pos, y=0.905,
+            text=f"<b>{label}</b>",
+            showarrow=False,
+            font=dict(color="#9aa0a6", size=11),
+            xref="paper", yref="paper"
+        )
+        fig.add_annotation(
+            x=pos, y=0.865,
+            text=f"<b>{value}</b>",
+            showarrow=False,
+            font=dict(color="#00d4ff", size=15),
+            xref="paper", yref="paper"
+        )
+    
+    # خط فاصل بعد الإعدادات
+    fig.add_shape(
+        type="line",
+        x0=0.05, x1=0.95, y0=0.815, y1=0.815,
+        line=dict(color="#333", width=1)
+    )
+    
     # ============ القسم العلوي: Zero-Gamma ============
     fig.add_annotation(
-        x=0.5, y=0.90,
+        x=0.5, y=0.78,
         text="<b>🎯 مؤشرات صفر غاما (Zero-Gamma)</b>",
         showarrow=False,
-        font=dict(color="#00d4ff", size=22),
+        font=dict(color="#00d4ff", size=20),
         xref="paper", yref="paper"
     )
     
@@ -473,24 +534,24 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     titles = ["📍 مستوى صفر غاما", "📏 المسافة من السعر", "📈 الإشارة", "🌊 تدفق غاما"]
     values = [f"${zero_gamma_level:.2f}", f"${distance_to_zero_gamma:.2f}", setup_signal, f"{gex_flow:+.0f}"]
     
-    # ✅ التعديل: تحديد لون الإشارة بناءً على نوع الإعداد
+    # ✅ الإشارة: Bullish = أخضر / Bearish = أحمر
     signal_color = "limegreen" if setup_signal == "Bullish Setup" else "crimson"
     
     colors = ["white", "white", signal_color, "limegreen" if gex_flow > 0 else "crimson"]
     
     for pos, title, value, color in zip(positions, titles, values, colors):
         fig.add_annotation(
-            x=pos, y=0.78,
+            x=pos, y=0.70,
             text=f"<b>{title}</b>",
             showarrow=False,
-            font=dict(color="white", size=15),
+            font=dict(color="white", size=14),
             xref="paper", yref="paper"
         )
         fig.add_annotation(
-            x=pos, y=0.64,
+            x=pos, y=0.61,
             text=f"<b>{value}</b>",
             showarrow=False,
-            font=dict(color=color, size=28),
+            font=dict(color=color, size=24),
             xref="paper", yref="paper"
         )
     
@@ -503,10 +564,10 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     
     # ============ القسم السفلي: Confluence Zones ============
     fig.add_annotation(
-        x=0.5, y=0.44,
+        x=0.5, y=0.46,
         text="<b>📍 مناطق التقاء غاما وفانا (Confluence Zones)</b>",
         showarrow=False,
-        font=dict(color="#00d4ff", size=22),
+        font=dict(color="#00d4ff", size=20),
         xref="paper", yref="paper"
     )
     
@@ -539,22 +600,22 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         lines = ["لا توجد مناطق التقاء حالياً."]
         colors_zones = ["gray"]
     
-    start_y = 0.33
-    step = 0.075
+    start_y = 0.36
+    step = 0.065
     
     for i, (line, color) in enumerate(zip(lines, colors_zones)):
         y_pos = start_y - (i * step)
-        if y_pos < 0.05:
+        if y_pos < 0.02:
             break
         fig.add_annotation(
             x=0.5, y=y_pos,
             text=f"<b>{line}</b>",
             showarrow=False,
-            font=dict(color=color, size=17),
+            font=dict(color=color, size=15),
             xref="paper", yref="paper"
         )
     
-    height = max(520, 300 + len(lines) * 45)
+    height = max(640, 420 + len(lines) * 40)
     
     fig.update_layout(
         plot_bgcolor="#0e1117",
@@ -753,22 +814,6 @@ def single_date_page(symbol):
         r = st.slider("سعر الفائدة الخالي من المخاطر (r)", 0.0, 0.2, 0.05, 0.005)
         
         st.divider()
-        st.markdown("### إعدادات متقدمة")
-        
-        iv_call_pct = st.slider("IV Call % من السعر", 1.05, 1.30, 1.15, 0.01, key="iv_call_pct")
-        iv_put_pct = st.slider("IV Put % من السعر", 0.70, 0.95, 0.85, 0.01, key="iv_put_pct")
-        sma_period = st.slider("فترة SMA لـ IV Skew", 5, 50, 20, 1, key="sma_period")
-        dev_threshold = st.slider("عتبة انحراف IV Skew", 0.05, 0.50, 0.20, 0.01, key="dev_threshold")
-        
-        st.divider()
-        
-        confluence_pct = st.slider(
-            "عتبة التقاء غاما/فانا %",
-            0.10, 0.60, 0.30, 0.01,
-            key="confluence_pct"
-        )
-        
-        st.divider()
         
         col1, col2 = st.columns(2)
         with col1:
@@ -800,13 +845,8 @@ def single_date_page(symbol):
         )
         st.caption("قم بتفعيل زر القفل أسفل كل رسم بياني لتثبيت النطاق.")
 
-    settings = {
-        'iv_skew_call_pct': iv_call_pct,
-        'iv_skew_put_pct': iv_put_pct,
-        'iv_sma_period': sma_period,
-        'iv_deviation_threshold': dev_threshold,
-        'confluence_pct': confluence_pct,
-    }
+    # ✅ الإعدادات ثابتة الآن (كانت في الـ sidebar)
+    settings = DEFAULT_SETTINGS.copy()
 
     df_filtered = df[(df['strike'] >= strike_range[0]) & (df['strike'] <= strike_range[1])].copy()
     df_sorted = df_filtered.sort_values('strike').reset_index(drop=True)
@@ -894,11 +934,13 @@ def single_date_page(symbol):
     gex_60min_ago = st.session_state.gex_history.get_60min_ago()
     gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
 
-    # ============ قسم موحد: Zero-Gamma + Confluence Zones (صورة PNG واحدة) ============
+    # ============ رسم موحّد: تاريخ الانتهاء + الإعدادات + Zero-Gamma + Confluence Zones ============
     st.divider()
+    st.caption("💡 لحفظ الرسم كصورة PNG، اضغط على أيقونة الكاميرا 📷 أعلى الرسم.")
     
     fig_combined = create_combined_chart(
-        zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow, zones, S, expiration_date
+        zero_gamma_level, distance_to_zero_gamma, setup_signal,
+        gex_flow, zones, S, expiration_date, settings
     )
     st.plotly_chart(fig_combined, use_container_width=True, key="chart_combined")
 
