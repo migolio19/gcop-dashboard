@@ -1090,32 +1090,43 @@ def single_date_page(symbol):
     half_range = max(center - min_s, max_s - center) * 1.2
     x_range_inv = (center - half_range, center + half_range)
 
-    # ============ الإحصائيات ============
     total_oi_calls = df_inventory['openInterest_call'].sum()
     total_oi_puts = df_inventory['openInterest_put'].sum()
     total_net = total_oi_calls - total_oi_puts
 
     fig_inv.update_layout(
-        title=f"Net Options Positions - {symbol} - {expiration_date}",
-        xaxis_title="Strike Price",
+        title=dict(
+            text=f"Net Options Positions - {symbol} - {expiration_date}",
+            x=0.02, xanchor='left',
+            font=dict(color="white", size=16)
+        ),
+        xaxis_title="",
         yaxis_title="Net Contracts",
         font=dict(color="white"),
         plot_bgcolor="#111",
         paper_bgcolor="#222",
         hovermode="x unified",
         barmode='relative',
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                    font=dict(color="white")),
         height=800,
-        margin=dict(l=10, r=10, t=40, b=200)
+        margin=dict(l=60, r=20, t=50, b=180)
     )
-    fig_inv.update_xaxes(gridcolor='gray', rangeslider=dict(visible=True), range=x_range_inv)
+
+    # ✅ إخفاء شريط التمرير لمنع التداخل مع الأرقام
+    fig_inv.update_xaxes(
+        gridcolor='gray',
+        rangeslider=dict(visible=False),
+        range=x_range_inv,
+        showticklabels=True
+    )
     fig_inv.update_yaxes(gridcolor='gray', zeroline=True, zerolinecolor='white')
 
-    # ============ إضافة الإحصائيات داخل الرسم ============
+    # ============ خط فاصل + الأرقام أسفل الشارت ============
     fig_inv.add_shape(
         type="line",
-        x0=0.02, x1=0.98, y0=-0.06, y1=-0.06,
-        line=dict(color="#444", width=1),
+        x0=0.02, x1=0.98, y0=-0.14, y1=-0.14,
+        line=dict(color="#555", width=1),
         xref="paper", yref="paper"
     )
 
@@ -1132,14 +1143,14 @@ def single_date_page(symbol):
 
     for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
         fig_inv.add_annotation(
-            x=pos, y=-0.13,
+            x=pos, y=-0.20,
             text=f"<b>{label}</b>",
             showarrow=False,
             font=dict(color="#9aa0a6", size=13),
             xref="paper", yref="paper"
         )
         fig_inv.add_annotation(
-            x=pos, y=-0.24,
+            x=pos, y=-0.32,
             text=f"<b>{value}</b>",
             showarrow=False,
             font=dict(color=color, size=26),
