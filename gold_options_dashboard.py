@@ -26,7 +26,6 @@ METRICS_LABELS = {
     "Gamma Gold": "قوة الدفع الذهبية (Gamma Gold)",
     "Delta Exposure": "دلتا (Delta Exposure)",
     "Vanna Exposure": "تأثير التقلب (Vanna Exposure)",
-    "Vanna Gold": "تأثير التقلب الذهبي (Vanna Gold) + Gamma",
     "Vega Exposure": "فيغا (Vega Exposure)",
     "Theta Exposure": "ثيتا (Theta Exposure)",
     "Charm Exposure (x10k)": "سحر الدلتا (Charm Exposure x10k)",
@@ -447,8 +446,7 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
 
 def plot_metric_single(df, S, call_col, put_col, title, y_axis, 
                        call_color='limegreen', put_color='crimson', x_range=None,
-                       zero_gamma_level=None, zones=None, gex_flow=None,
-                       show_gamma_line=False, gamma_line_data=None):
+                       zero_gamma_level=None, zones=None, gex_flow=None):
     fig = go.Figure()
     
     fig.add_trace(go.Bar(x=df['strike'], y=df[call_col], marker_color=call_color, name='Calls', legendgroup='calls'))
@@ -496,15 +494,6 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
             bgcolor="rgba(0,0,0,0.7)",
             borderpad=4
         )
-    
-    if show_gamma_line and gamma_line_data is not None:
-        fig.add_trace(go.Scatter(
-            x=df['strike'],
-            y=gamma_line_data,
-            mode='lines',
-            line=dict(color='cyan', width=2, dash='dash'),
-            name='Gamma Exposure'
-        ))
 
     display_title = METRICS_LABELS.get(title, title)
     fig.update_layout(
@@ -658,14 +647,6 @@ def single_date_page(symbol):
         
         st.divider()
         
-        taha_confluence_pct = st.slider(
-            "عتبة التقاء غاما/فانا لـ طه %",
-            0.10, 0.60, 0.30, 0.01,
-            key="taha_confluence_pct"
-        )
-        
-        st.divider()
-        
         col1, col2 = st.columns(2)
         with col1:
             if st.button("تحديث سريع", width="stretch"):
@@ -702,7 +683,6 @@ def single_date_page(symbol):
         'iv_sma_period': sma_period,
         'iv_deviation_threshold': dev_threshold,
         'confluence_pct': confluence_pct,
-        'taha_confluence_pct': taha_confluence_pct,
     }
 
     df_filtered = df[(df['strike'] >= strike_range[0]) & (df['strike'] <= strike_range[1])].copy()
@@ -738,8 +718,6 @@ def single_date_page(symbol):
     df_sorted['put_gamma_gold'] = oi_p * gamma_val * -1.2
     df_sorted['call_vanna'] = oi_c * vanna_val
     df_sorted['put_vanna'] = oi_p * vanna_val
-    df_sorted['call_vanna_gold'] = oi_c * vanna_val * 1.2
-    df_sorted['put_vanna_gold'] = oi_p * vanna_val * 1.2
     df_sorted['openInterest_call_display'] = oi_c
     df_sorted['openInterest_put_display'] = oi_p * -1
     df_sorted['call_vega'] = oi_c * vega_val
@@ -855,13 +833,13 @@ def single_date_page(symbol):
         st.write(f"**SMA {settings['iv_sma_period']}:** {sma_value:.4f}")
         st.write(f"**الانحراف:** {deviation:.2%}")
 
+    # تم حذف Vanna Gold
     metrics = [
         ('openInterest_call_display', 'openInterest_put_display', 'Open Interest', 'Contracts'),
         ('call_gamma', 'put_gamma', 'Gamma Exposure', 'Gamma Exposure'),
         ('call_gamma_gold', 'put_gamma_gold', 'Gamma Gold', 'Gamma Exposure'),
         ('call_delta', 'put_delta', 'Delta Exposure', 'Delta Exposure'),
         ('call_vanna', 'put_vanna', 'Vanna Exposure', 'Vanna Exposure'),
-        ('call_vanna_gold', 'put_vanna_gold', 'Vanna Gold', 'Vanna Exposure'),
         ('call_vega', 'put_vega', 'Vega Exposure', 'Vega Exposure'),
         ('call_theta', 'put_theta', 'Theta Exposure', 'Theta Exposure'),
         ('call_charm', 'put_charm', 'Charm Exposure (x10k)', 'Charm (x10k)'),
@@ -883,20 +861,12 @@ def single_date_page(symbol):
             zones_list = None
             gex_flow_val = None
         
-        show_gamma = False
-        gamma_line = None
-        if title == "Vanna Gold":
-            show_gamma = True
-            gamma_line = df_sorted['call_gamma_gold'].values
-        
         fig = plot_metric_single(
             df_sorted, S, call_col, put_col, title, yaxis, 
             x_range=x_range,
             zero_gamma_level=zero_gamma,
             zones=zones_list,
-            gex_flow=gex_flow_val,
-            show_gamma_line=show_gamma,
-            gamma_line_data=gamma_line
+            gex_flow=gex_flow_val
         )
 
         col_plot, col_freeze = st.columns([0.96, 0.04])
@@ -1024,145 +994,7 @@ def single_date_page(symbol):
     with col4:
         st.metric("السعر الحالي", f"${S:.2f}")
 
-    st.divider()
-    st.subheader("⚡ قوة الدفع طه + Vanna + مناطق التقاء")
-
-    threshold_taha = settings['taha_confluence_pct']
-    max_gamma_abs = df_sorted['net_gamma'].abs().max()
-    max_vanna_abs = df_sorted['net_vanna'].abs().max()
-    
-    taha_zones = []
-    for idx, row in df_sorted.iterrows():
-        strike = row['strike']
-        net_g = row['net_gamma']
-        net_v = row['net_vanna']
-        
-        if max_gamma_abs == 0 or max_vanna_abs == 0:
-            continue
-        
-        gamma_ratio = net_g / max_gamma_abs
-        vanna_ratio = net_v / max_vanna_abs
-        
-        if gamma_ratio > threshold_taha and vanna_ratio > threshold_taha and S > zero_gamma_level:
-            taha_zones.append({
-                'strike': strike,
-                'type': 'squeeze',
-                'gamma_ratio': gamma_ratio,
-                'vanna_ratio': vanna_ratio,
-                'color': 'limegreen',
-                'marker': 'SQZ'
-            })
-        
-        if gamma_ratio < -threshold_taha and vanna_ratio < -threshold_taha and S < zero_gamma_level:
-            taha_zones.append({
-                'strike': strike,
-                'type': 'meltdown',
-                'gamma_ratio': gamma_ratio,
-                'vanna_ratio': vanna_ratio,
-                'color': 'red',
-                'marker': 'MLT'
-            })
-
-    fig_taha = go.Figure()
-
-    fig_taha.add_trace(go.Bar(
-        x=df_sorted['strike'],
-        y=df_sorted['call_gamma'],
-        marker_color='limegreen',
-        name='Calls',
-        legendgroup='calls'
-    ))
-    fig_taha.add_trace(go.Bar(
-        x=df_sorted['strike'],
-        y=df_sorted['put_gamma'],
-        marker_color='crimson',
-        name='Puts',
-        legendgroup='puts'
-    ))
-    fig_taha.update_layout(barmode='relative')
-
-    fig_taha.add_vline(
-        x=S,
-        line_dash="dash",
-        line_color="white",
-        annotation_text=f"S = {S:.1f}",
-        annotation_position="top",
-        annotation_font=dict(color="white", size=12)
-    )
-
-    fig_taha.add_vline(
-        x=zero_gamma_level,
-        line_dash="dash",
-        line_color="white",
-        annotation_text="Zero-Gamma",
-        annotation_position="bottom",
-        annotation_font=dict(color="white", size=10)
-    )
-
-    fig_taha.add_trace(go.Scatter(
-        x=df_sorted['strike'],
-        y=df_sorted['net_vanna'],
-        mode='lines',
-        line=dict(color='orange', width=2, dash='dash'),
-        name='Vanna Exposure'
-    ))
-
-    for zone in taha_zones:
-        fig_taha.add_vline(
-            x=zone['strike'],
-            line_dash="dot",
-            line_color=zone['color'],
-            annotation_text=f"{zone['marker']} {zone['type'].upper()}",
-            annotation_position="top",
-            annotation_font=dict(color=zone['color'], size=10)
-        )
-
-    min_s = df_sorted['strike'].min()
-    max_s = df_sorted['strike'].max()
-    if S < min_s:
-        min_s = S - (max_s - min_s) * 0.15
-    elif S > max_s:
-        max_s = S + (max_s - min_s) * 0.15
-    center = S
-    half_range = max(center - min_s, max_s - center) * 1.2
-    x_range_taha = (center - half_range, center + half_range)
-
-    fig_taha.update_layout(
-        title="Gamma Taha + Vanna Exposure + Confluence Zones",
-        yaxis_title="Gamma Exposure",
-        xaxis_title="Strike Price",
-        font=dict(color="white"),
-        plot_bgcolor="#111",
-        paper_bgcolor="#222",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="white")),
-        margin=dict(l=10, r=10, t=40, b=40)
-    )
-    fig_taha.update_xaxes(gridcolor='gray', rangeslider=dict(visible=True), range=x_range_taha)
-    fig_taha.update_yaxes(gridcolor='gray')
-
-    st.plotly_chart(fig_taha, use_container_width=True)
-
-    if taha_zones:
-        st.divider()
-        st.subheader("📍 مناطق التقاء غاما وفانا (Confluence Zones) - لـ طه")
-        
-        squeeze_zones = [z for z in taha_zones if z['type'] == 'squeeze']
-        meltdown_zones = [z for z in taha_zones if z['type'] == 'meltdown']
-        
-        if squeeze_zones:
-            squeeze_str = ', '.join([f"${z['strike']:.2f}" for z in squeeze_zones])
-            st.success(f"💥 مناطق Squeeze عند: {squeeze_str}")
-        if meltdown_zones:
-            meltdown_str = ', '.join([f"${z['strike']:.2f}" for z in meltdown_zones])
-            st.error(f"⬇️ مناطق Meltdown عند: {meltdown_str}")
-        
-        for zone in taha_zones:
-            st.caption(
-                f"عند ${zone['strike']:.2f}: "
-                f"جاما = {zone['gamma_ratio']:.2%} من Max، "
-                f"فانا = {zone['vanna_ratio']:.2%} من Max"
-            )
+    # تم حذف قسم "قوة الدفع طه" بالكامل
 
     st.divider()
     csv_data_all = df_sorted.to_csv(index=False).encode('utf-8')
