@@ -1,0 +1,36 @@
+name: Fetch Options Data
+
+on:
+  schedule:
+    - cron: '0,30 13-20 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install "yfinance>=1.0.0" curl_cffi
+      
+      - name: Fetch options data
+        run: python fetch_data.py
+      
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git add options_data.json
+          git diff --staged --quiet && echo "No changes" || (git commit -m "Auto-update options data [skip ci]" && git push)
