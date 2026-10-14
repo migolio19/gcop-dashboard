@@ -470,7 +470,7 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         xref="paper", yref="paper"
     )
     
-    # ============ جدول الإعدادات المتقدمة (كانت في الـ sidebar) ============
+    # ============ جدول الإعدادات المتقدمة (بدون شريط خلفي) ============
     fig.add_annotation(
         x=0.5, y=0.945,
         text="<b>⚙️ الإعدادات المتقدمة</b>",
@@ -486,15 +486,6 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         ("IV Skew Dev", f"{settings['iv_deviation_threshold']:.2f}"),
         ("Confluence %", f"{settings['confluence_pct']:.2f}"),
     ]
-    
-    # مستطيل خلفي للجدول
-    fig.add_shape(
-        type="rect",
-        x0=0.03, x1=0.97, y0=0.845, y1=0.925,
-        fillcolor="rgba(0, 212, 255, 0.06)",
-        line=dict(color="#00d4ff", width=1),
-        xref="paper", yref="paper"
-    )
     
     positions_set = [0.12, 0.31, 0.50, 0.69, 0.88]
     
@@ -536,7 +527,6 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     
     # ✅ الإشارة: Bullish = أخضر / Bearish = أحمر
     signal_color = "limegreen" if setup_signal == "Bullish Setup" else "crimson"
-    
     colors = ["white", "white", signal_color, "limegreen" if gex_flow > 0 else "crimson"]
     
     for pos, title, value, color in zip(positions, titles, values, colors):
@@ -934,7 +924,7 @@ def single_date_page(symbol):
     gex_60min_ago = st.session_state.gex_history.get_60min_ago()
     gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
 
-    # ============ رسم موحّد: تاريخ الانتهاء + الإعدادات + Zero-Gamma + Confluence Zones ============
+    # ============ رسم موحّد ============
     st.divider()
     st.caption("💡 لحفظ الرسم كصورة PNG، اضغط على أيقونة الكاميرا 📷 أعلى الرسم.")
     
