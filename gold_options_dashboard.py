@@ -444,19 +444,28 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
     return zones
 
 
-def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow, zones, S):
+def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow, zones, S, expiration_date):
     """إنشاء رسم Plotly واحد يجمع Zero-Gamma و Confluence Zones (قابل للحفظ كـ PNG واحد)"""
     fig = go.Figure()
     
     fig.update_xaxes(visible=False, range=[0, 1])
     fig.update_yaxes(visible=False, range=[0, 1])
     
+    # ============ عنوان تاريخ الانتهاء ============
+    fig.add_annotation(
+        x=0.5, y=0.99,
+        text=f"<b>📅 تاريخ الانتهاء: {expiration_date}</b>",
+        showarrow=False,
+        font=dict(color="#00d4ff", size=18),
+        xref="paper", yref="paper"
+    )
+    
     # ============ القسم العلوي: Zero-Gamma ============
     fig.add_annotation(
-        x=0.5, y=0.94,
+        x=0.5, y=0.90,
         text="<b>🎯 مؤشرات صفر غاما (Zero-Gamma)</b>",
         showarrow=False,
-        font=dict(color="#00d4ff", size=16),
+        font=dict(color="#00d4ff", size=22),
         xref="paper", yref="paper"
     )
     
@@ -467,33 +476,33 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
     
     for pos, title, value, color in zip(positions, titles, values, colors):
         fig.add_annotation(
-            x=pos, y=0.82,
+            x=pos, y=0.78,
             text=f"<b>{title}</b>",
             showarrow=False,
-            font=dict(color="white", size=11),
+            font=dict(color="white", size=15),
             xref="paper", yref="paper"
         )
         fig.add_annotation(
-            x=pos, y=0.69,
+            x=pos, y=0.64,
             text=f"<b>{value}</b>",
             showarrow=False,
-            font=dict(color=color, size=20),
+            font=dict(color=color, size=28),
             xref="paper", yref="paper"
         )
     
     # خط فاصل
     fig.add_shape(
         type="line",
-        x0=0.05, x1=0.95, y0=0.58, y1=0.58,
+        x0=0.05, x1=0.95, y0=0.52, y1=0.52,
         line=dict(color="#444", width=1)
     )
     
     # ============ القسم السفلي: Confluence Zones ============
     fig.add_annotation(
-        x=0.5, y=0.48,
+        x=0.5, y=0.44,
         text="<b>📍 مناطق التقاء غاما وفانا (Confluence Zones)</b>",
         showarrow=False,
-        font=dict(color="#00d4ff", size=16),
+        font=dict(color="#00d4ff", size=22),
         xref="paper", yref="paper"
     )
     
@@ -526,8 +535,8 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
         lines = ["لا توجد مناطق التقاء حالياً."]
         colors_zones = ["gray"]
     
-    start_y = 0.37
-    step = 0.08
+    start_y = 0.33
+    step = 0.075
     
     for i, (line, color) in enumerate(zip(lines, colors_zones)):
         y_pos = start_y - (i * step)
@@ -537,15 +546,15 @@ def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal
             x=0.5, y=y_pos,
             text=f"<b>{line}</b>",
             showarrow=False,
-            font=dict(color=color, size=13),
+            font=dict(color=color, size=17),
             xref="paper", yref="paper"
         )
     
-    height = max(450, 250 + len(lines) * 40)
+    height = max(520, 300 + len(lines) * 45)
     
     fig.update_layout(
-        plot_bgcolor="#111",
-        paper_bgcolor="#222",
+        plot_bgcolor="#0e1117",
+        paper_bgcolor="#0e1117",
         height=height,
         margin=dict(l=10, r=10, t=20, b=20),
         showlegend=False
@@ -885,7 +894,7 @@ def single_date_page(symbol):
     st.divider()
     
     fig_combined = create_combined_chart(
-        zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow, zones, S
+        zero_gamma_level, distance_to_zero_gamma, setup_signal, gex_flow, zones, S, expiration_date
     )
     st.plotly_chart(fig_combined, use_container_width=True, key="chart_combined")
 
