@@ -679,6 +679,7 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
 
 
 def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
+    """رسم IV Skew مع الأرقام الأربعة داخل الرسم لتنزيلها كصورة PNG واحدة"""
     fig = go.Figure()
     
     if skew_history:
@@ -710,6 +711,47 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
         borderpad=4
     )
     
+    # ============ الأرقام الأربعة داخل الرسم ============
+    deviation_pct = deviation * 100
+    is_abnormal = abs(deviation) > 0.20
+    
+    metric_positions = [0.125, 0.375, 0.625, 0.875]
+    metric_labels = ["📊 IV Skew الحالي", "📈 المتوسط (SMA 20)", "📉 الانحراف عن المتوسط", "🎯 حالة الانحراف"]
+    metric_values = [
+        f"{current_skew:.4f}",
+        f"{sma_value:.4f}",
+        f"{deviation_pct:.2f}%",
+        "⚠️ غير طبيعي" if is_abnormal else "✅ طبيعي"
+    ]
+    
+    dev_color = "yellow" if is_abnormal else "white"
+    state_color = "yellow" if is_abnormal else "limegreen"
+    metric_colors = ["white", "white", dev_color, state_color]
+    
+    fig.add_shape(
+        type="line",
+        x0=0.02, x1=0.98, y0=-0.14, y1=-0.14,
+        line=dict(color="#555", width=1),
+        xref="paper", yref="paper"
+    )
+    
+    for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
+        fig.add_annotation(
+            x=pos, y=-0.22,
+            text=f"<b>{label}</b>",
+            showarrow=False,
+            font=dict(color="#9aa0a6", size=13),
+            xref="paper", yref="paper"
+        )
+        font_size = 22 if "حالة" in label else 26
+        fig.add_annotation(
+            x=pos, y=-0.32,
+            text=f"<b>{value}</b>",
+            showarrow=False,
+            font=dict(color=color, size=font_size),
+            xref="paper", yref="paper"
+        )
+    
     fig.update_layout(
         title="IV Skew",
         yaxis_title="IV Spread",
@@ -717,7 +759,8 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
         font=dict(color="white"),
         plot_bgcolor="#111",
         paper_bgcolor="#222",
-        margin=dict(l=10, r=10, t=40, b=40)
+        height=650,
+        margin=dict(l=10, r=10, t=40, b=150)
     )
     fig.update_xaxes(gridcolor='gray')
     fig.update_yaxes(gridcolor='gray')
@@ -928,20 +971,7 @@ def single_date_page(symbol):
     st.subheader("📉 مؤشر انحراف التقلب (IV Skew)")
 
     fig_skew = plot_iv_skew(skew_history, sma_history, skew_value, sma_value, deviation)
-    st.plotly_chart(fig_skew, use_container_width=True)
-
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("📊 IV Skew الحالي", f"{skew_value:.4f}")
-    with col2:
-        st.metric("📈 المتوسط (SMA 20)", f"{sma_value:.4f}")
-    with col3:
-        deviation_pct = deviation * 100
-        st.metric("📉 الانحراف عن المتوسط", f"{deviation_pct:.2f}%",
-                  delta=f"{deviation_pct:.2f}%",
-                  delta_color="inverse" if abs(deviation) > 0.20 else "off")
-    with col4:
-        st.metric("🎯 حالة الانحراف", "⚠️ غير طبيعي" if abs(deviation) > 0.20 else "✅ طبيعي")
+    st.plotly_chart(fig_skew, use_container_width=True, key="chart_iv_skew")
 
     with st.expander("📊 تفاصيل IV Skew"):
         st.write(f"**سعر تنفيذ Call ({settings['iv_skew_call_pct']:.0%}):** ${call_strike:.2f} - IV: {call_iv:.4f}")
@@ -1104,7 +1134,6 @@ def single_date_page(symbol):
         margin=dict(l=60, r=20, t=50, b=170)
     )
 
-    # ✅ شريط التمرير بسماكة كبيرة (0.08) كما كان
     fig_inv.update_xaxes(
         gridcolor='gray',
         rangeslider=dict(visible=True, thickness=0.08),
@@ -1113,7 +1142,6 @@ def single_date_page(symbol):
     )
     fig_inv.update_yaxes(gridcolor='gray', zeroline=True, zerolinecolor='white')
 
-    # ============ خط فاصل + الأرقام أسفل شريط التمرير (بدون تداخل) ============
     fig_inv.add_shape(
         type="line",
         x0=0.02, x1=0.98, y0=-0.23, y1=-0.23,
@@ -1133,7 +1161,6 @@ def single_date_page(symbol):
     metric_colors = ["white", "white", net_color, "white"]
 
     for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
-        # العنوان
         fig_inv.add_annotation(
             x=pos, y=-0.28,
             text=f"<b>{label}</b>",
@@ -1141,7 +1168,6 @@ def single_date_page(symbol):
             font=dict(color="#9aa0a6", size=13),
             xref="paper", yref="paper"
         )
-        # القيمة
         fig_inv.add_annotation(
             x=pos, y=-0.36,
             text=f"<b>{value}</b>",
