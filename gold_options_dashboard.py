@@ -12,6 +12,7 @@ import time
 import urllib.request
 import os
 from collections import deque
+import yfinance as yf
 
 st.set_page_config(page_title="رادار عادل للخيارات الكمية", layout="wide")
 
@@ -83,8 +84,92 @@ def get_current_price(symbol):
         return None
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=45, show_spinner=False)
+def fetch_live_options_data(symbol, expiration_date=None):
+    """جلب البيانات مباشرة من Yahoo Finance (يتحدث كل 45 ثانية)"""
+    try:
+        ticker = yf.Ticker(symbol)
+        
+        # ====== جلب السعر الحالي ======
+        current_price = None
+        try:
+            info = ticker.fast_info
+            current_price = getattr(info, 'last_price', None)
+        except:
+            pass
+        
+        if not current_price:
+            try:
+                hist = ticker.history(period='1d', interval='1m')
+                if not hist.empty:
+                    current_price = float(hist['Close'].iloc[-1])
+            except:
+                pass
+        
+        if not current_price:
+            try:
+                hist = ticker.history(period='5d')
+                if not hist.empty:
+                    current_price = float(hist['Close'].iloc[-1])
+            except:
+                pass
+        
+        if not current_price:
+            return None, None, None, None
+        
+        # ====== جلب تواريخ الانتهاء ======
+        expirations = ticker.options
+        if not expirations:
+            return None, None, None, None
+        
+        if expiration_date is None or expiration_date not in expirations:
+            expiration_date = expirations[0]
+        
+        # ====== جلب سلسلة الخيارات ======
+        chain = ticker.option_chain(expiration_date)
+        calls = chain.calls
+        puts = chain.puts
+        
+        # ====== حساب T ======
+        exp_date_obj = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
+        now = datetime.datetime.now()
+        days_to_exp = max((exp_date_obj - now).days, 1)
+        T = days_to_exp / 365.0
+        
+        # ====== بناء DataFrame ======
+        df = pd.merge(
+            calls[['strike', 'openInterest', 'impliedVolatility']],
+            puts[['strike', 'openInterest', 'impliedVolatility']],
+            on='strike', how='outer', suffixes=('_call', '_put')
+        )
+        
+        df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
+                   'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
+        
+        total_oi = df['openInterest_call'] + df['openInterest_put']
+        df['weighted_IV'] = np.where(total_oi > 0,
+                                     (df['openInterest_call'] * df['impliedVolatility_call'] +
+                                      df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
+                                     (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
+        
+        return float(current_price), expiration_date, df, float(T)
+    except Exception:
+        return None, None, None, None
+
+
 def fetch_options_data(symbol, expiration_date=None):
+    # ✅ محاولة الجلب المباشر أولاً عندما يكون السوق مفتوحاً
+    status, _ = get_market_status()
+    
+    if status == "open":
+        live_price, live_exp, live_df, live_T = fetch_live_options_data(symbol, expiration_date)
+        if live_df is not None and not live_df.empty:
+            st.session_state['data_source'] = 'live'
+            st.session_state['data_fetch_time'] = datetime.datetime.now()
+            return live_price, live_exp, live_df, live_T
+    
+    st.session_state['data_source'] = 'cached'
+    # ⬇️ الكود القديم (قراءة JSON) كـ fallback
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -267,19 +352,8 @@ def get_market_status():
 def should_autorefresh():
     status, now_ny = get_market_status()
     if status == "closed":
-        target_time = datetime.time(8, 30)
-        current_time = now_ny.time()
-        if current_time <= target_time:
-            return True
-        else:
-            return False
-    else:
-        target_time = datetime.time(15, 0)
-        current_time = now_ny.time()
-        if current_time >= target_time:
-            return False
-        else:
-            return True
+        return False
+    return True
 
 
 def d1(S, K, T, r, sigma, q=0.0):
@@ -908,6 +982,16 @@ def single_date_page(symbol):
     S = current_price
     q = 0.0
 
+    # ✅ مؤشر مصدر البيانات
+    source = st.session_state.get('data_source', 'cached')
+    fetch_time = st.session_state.get('data_fetch_time', None)
+    
+    if source == 'live':
+        time_str = fetch_time.strftime('%H:%M:%S') if fetch_time else ''
+        st.success(f"🟢 **بيانات مباشرة من السوق** — آخر جلب: {time_str}")
+    else:
+        st.warning("🟡 **بيانات محفوظة (GitHub Actions)** — سيتم التحديث عند فتح السوق")
+
     with st.sidebar:
         st.markdown("## الإعدادات")
         r = st.slider("سعر الفائدة الخالي من المخاطر (r)", 0.0, 0.2, 0.05, 0.005)
@@ -1275,8 +1359,9 @@ def single_date_page(symbol):
         key='download_csv_single'
     )
 
+    # ✅ التحديث التلقائي كل 15 ثانية أثناء السوق المفتوح
     if should_autorefresh():
-        st_autorefresh(interval=30 * 1000, key="auto_normal")
+        st_autorefresh(interval=15 * 1000, key="auto_normal")
     else:
         st.caption("التحديث التلقائي متوقف (خارج ساعات السوق).")
 
@@ -1441,12 +1526,12 @@ def main():
             minutes_ago = int(time_diff.total_seconds() / 60)
             
             if minutes_ago < 60:
-                st.info(f"آخر تحديث للبيانات: قبل {minutes_ago} دقيقة ({last_update.strftime('%H:%M')})")
+                st.info(f"آخر تحديث للبيانات المحفوظة: قبل {minutes_ago} دقيقة ({last_update.strftime('%H:%M')})")
             else:
                 hours_ago = minutes_ago // 60
-                st.warning(f"آخر تحديث للبيانات: قبل {hours_ago} ساعة ({last_update.strftime('%H:%M')})")
+                st.warning(f"آخر تحديث للبيانات المحفوظة: قبل {hours_ago} ساعة ({last_update.strftime('%H:%M')})")
         except:
-            st.info(f"آخر تحديث: {metadata['last_updated']}")
+            st.info(f"آخر تحديث محفوظ: {metadata['last_updated']}")
 
     st.divider()
 
