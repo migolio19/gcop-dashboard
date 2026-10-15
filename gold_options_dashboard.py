@@ -679,8 +679,9 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
 
 
 def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
+                 call_strike, put_strike,
                  y_range_mode="auto", y_range_manual=None):
-    """رسم IV Skew مع Auto-Scale لمحور Y + نطاقات تحذيرية + خط الصفر"""
+    """رسم IV Skew مع Auto-Scale + 6 أرقام داخل الرسم (شاملة سعر التنفيذ)"""
     fig = go.Figure()
     
     # ============ حساب نطاق Y تلقائياً ============
@@ -712,28 +713,23 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         fig.add_hrect(
             y0=-threshold, y1=threshold,
             fillcolor="rgba(0,255,0,0.04)",
-            line_width=0,
-            layer="below"
+            line_width=0, layer="below"
         )
     if auto_y_min < threshold:
         fig.add_hrect(
             y0=threshold, y1=auto_y_max,
             fillcolor="rgba(255,255,0,0.06)",
-            line_width=0,
-            layer="below"
+            line_width=0, layer="below"
         )
     if auto_y_max > -threshold:
         fig.add_hrect(
             y0=auto_y_min, y1=-threshold,
             fillcolor="rgba(255,255,0,0.06)",
-            line_width=0,
-            layer="below"
+            line_width=0, layer="below"
         )
     
-    # ============ خط الصفر ============
+    # ============ خط الصفر وخطوط ±0.20 ============
     fig.add_hline(y=0, line_dash="solid", line_color="#666", line_width=1)
-    
-    # ============ خطوط ±0.20 (تحذيرية) ============
     fig.add_hline(y=threshold, line_dash="dot", line_color="orange", opacity=0.5,
                   annotation_text="+0.20", annotation_position="right",
                   annotation_font=dict(color="orange", size=10))
@@ -773,22 +769,38 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         borderpad=4
     )
     
-    # ============ الأرقام الأربعة داخل الرسم ============
+    # ============ الأرقام الستة داخل الرسم ============
     deviation_pct = deviation * 100
     is_abnormal = abs(deviation) > 0.20
     
-    metric_positions = [0.125, 0.375, 0.625, 0.875]
-    metric_labels = ["📊 IV Skew الحالي", "📈 المتوسط (SMA 20)", "📉 الانحراف عن المتوسط", "🎯 حالة الانحراف"]
+    metric_positions = [0.083, 0.25, 0.417, 0.583, 0.75, 0.917]
+    metric_labels = [
+        "📊 IV Skew الحالي",
+        "📈 SMA 20",
+        "📉 الانحراف",
+        "🎯 حالة الانحراف",
+        "📍 سعر تنفيذ Call",
+        "📍 سعر تنفيذ Put"
+    ]
     metric_values = [
         f"{current_skew:.4f}",
         f"{sma_value:.4f}",
         f"{deviation_pct:.2f}%",
-        "⚠️ غير طبيعي" if is_abnormal else "✅ طبيعي"
+        "⚠️ غير طبيعي" if is_abnormal else "✅ طبيعي",
+        f"${call_strike:.2f}",
+        f"${put_strike:.2f}"
     ]
     
     dev_color = "yellow" if is_abnormal else "white"
     state_color = "yellow" if is_abnormal else "limegreen"
-    metric_colors = ["white", "white", dev_color, state_color]
+    metric_colors = [
+        "white",       # IV Skew
+        "white",       # SMA
+        dev_color,     # Deviation
+        state_color,   # State
+        "limegreen",   # Call Strike 🟢
+        "crimson"      # Put Strike 🔴
+    ]
     
     fig.add_shape(
         type="line",
@@ -802,10 +814,13 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
             x=pos, y=-0.22,
             text=f"<b>{label}</b>",
             showarrow=False,
-            font=dict(color="#9aa0a6", size=13),
+            font=dict(color="#9aa0a6", size=11),
             xref="paper", yref="paper"
         )
-        font_size = 22 if "حالة" in label else 26
+        if "حالة" in label:
+            font_size = 20
+        else:
+            font_size = 24
         fig.add_annotation(
             x=pos, y=-0.32,
             text=f"<b>{value}</b>",
@@ -1046,7 +1061,6 @@ def single_date_page(symbol):
     st.divider()
     st.subheader("📉 مؤشر انحراف التقلب (IV Skew)")
 
-    # ✅ التحكم في نطاق محور Y
     col_ctrl1, col_ctrl2 = st.columns([3, 1])
     with col_ctrl2:
         auto_scale = st.checkbox("Auto-Scale تلقائي", value=True, key="iv_skew_auto")
@@ -1064,6 +1078,7 @@ def single_date_page(symbol):
     
     fig_skew = plot_iv_skew(
         skew_history, sma_history, skew_value, sma_value, deviation,
+        call_strike, put_strike,
         y_range_mode="auto" if auto_scale else "manual",
         y_range_manual=y_range_manual
     )
