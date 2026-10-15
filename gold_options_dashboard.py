@@ -685,7 +685,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
     """رسم IV Skew مع Auto-Scale + صفّين من الأرقام (الأساسية + Call/Put التفاصيل)"""
     fig = go.Figure()
     
-    # ============ حساب نطاق Y تلقائياً ============
     all_values = []
     if skew_history:
         all_values.extend([v for v in skew_history if v is not None and not np.isnan(v)])
@@ -708,7 +707,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
     else:
         auto_y_min, auto_y_max = -0.1, 0.1
     
-    # ============ نطاقات تحذيرية عند ±0.20 ============
     threshold = 0.20
     if auto_y_min < -threshold < auto_y_max:
         fig.add_hrect(y0=-threshold, y1=threshold, fillcolor="rgba(0,255,0,0.04)",
@@ -720,7 +718,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         fig.add_hrect(y0=auto_y_min, y1=-threshold, fillcolor="rgba(255,255,0,0.06)",
                       line_width=0, layer="below")
     
-    # ============ خط الصفر وخطوط ±0.20 ============
     fig.add_hline(y=0, line_dash="solid", line_color="#666", line_width=1)
     fig.add_hline(y=threshold, line_dash="dot", line_color="orange", opacity=0.5,
                   annotation_text="+0.20", annotation_position="right",
@@ -729,7 +726,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
                   annotation_text="-0.20", annotation_position="right",
                   annotation_font=dict(color="orange", size=10))
     
-    # ============ خطوط البيانات ============
     if skew_history:
         fig.add_trace(go.Scatter(
             x=list(range(len(skew_history))), y=skew_history,
@@ -743,7 +739,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
             mode='lines', line=dict(color='orange', width=2, dash='dash'), name='SMA'
         ))
     
-    # ============ Badge ============
     color_badge = 'yellow' if abs(deviation) > 0.20 else 'white'
     fig.add_annotation(
         x=0.5, y=0.97, xref="paper", yref="paper",
@@ -752,9 +747,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         bgcolor="rgba(0,0,0,0.6)", borderpad=4
     )
     
-    # ====================================================================
-    # ✅ الصف الأول: الأرقام الأساسية (4 أرقام)
-    # ====================================================================
     deviation_pct = deviation * 100
     is_abnormal = abs(deviation) > 0.20
     
@@ -786,17 +778,11 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
             font=dict(color=color, size=font_size), xref="paper", yref="paper"
         )
     
-    # ====================================================================
-    # ✅ خط فاصل بين الصفين
-    # ====================================================================
     fig.add_shape(
         type="line", x0=0.02, x1=0.98, y0=-0.30, y1=-0.30,
         line=dict(color="#555", width=1), xref="paper", yref="paper"
     )
     
-    # ====================================================================
-    # ✅ الصف الثاني: تفاصيل Call و Put (6 أرقام)
-    # ====================================================================
     row2_positions = [0.083, 0.25, 0.417, 0.583, 0.75, 0.917]
     row2_labels = [
         "📍 سعر تنفيذ Call",
@@ -829,7 +815,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
             font=dict(color=color, size=22), xref="paper", yref="paper"
         )
     
-    # ============ تحديد نطاق Y النهائي ============
     if y_range_mode == "auto":
         final_y_min, final_y_max = auto_y_min, auto_y_max
     elif y_range_mode == "manual" and y_range_manual is not None:
@@ -1048,7 +1033,6 @@ def single_date_page(symbol):
     gex_flow = current_net_gex - gex_60min_ago if gex_60min_ago is not None else 0
 
     st.divider()
-    st.caption("💡 لحفظ الرسم كصورة PNG، اضغط على أيقونة الكاميرا 📷 أعلى الرسم.")
     
     fig_combined = create_combined_chart(
         zero_gamma_level, distance_to_zero_gamma, setup_signal,
@@ -1082,13 +1066,6 @@ def single_date_page(symbol):
         y_range_manual=y_range_manual
     )
     st.plotly_chart(fig_skew, use_container_width=True, key="chart_iv_skew")
-
-    with st.expander("📊 تفاصيل IV Skew"):
-        st.write(f"**سعر تنفيذ Call ({settings['iv_skew_call_pct']:.0%}):** ${call_strike:.2f} - IV: {call_iv:.4f}")
-        st.write(f"**سعر تنفيذ Put ({settings['iv_skew_put_pct']:.0%}):** ${put_strike:.2f} - IV: {put_iv:.4f}")
-        st.write(f"**Skew:** {skew_value:.4f}")
-        st.write(f"**SMA {settings['iv_sma_period']}:** {sma_value:.4f}")
-        st.write(f"**الانحراف:** {deviation:.2%}")
 
     metrics = [
         ('openInterest_call_display', 'openInterest_put_display', 'Open Interest', 'Contracts'),
