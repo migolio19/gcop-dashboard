@@ -44,13 +44,15 @@ DEFAULT_SETTINGS = {
 
 VISITOR_FILE = "visitors_log.json"
 DATA_FILE = "options_data.json"
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/migolio19/gcop-dashboard/main/options_data.json"
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def get_options_metadata():
     try:
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
+        req = urllib.request.Request(GITHUB_RAW_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode('utf-8'))
         return {
             "last_updated": data.get("last_updated", "Unknown"),
             "symbols": list(data.get("symbols", {}).keys())
@@ -59,11 +61,12 @@ def get_options_metadata():
         return {"last_updated": "Unknown", "symbols": []}
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def get_available_expirations(symbol):
     try:
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
+        req = urllib.request.Request(GITHUB_RAW_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode('utf-8'))
         if symbol not in data.get("symbols", {}):
             return []
         return list(data["symbols"][symbol]["expirations"].keys())
@@ -71,11 +74,12 @@ def get_available_expirations(symbol):
         return []
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def get_current_price(symbol):
     try:
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
+        req = urllib.request.Request(GITHUB_RAW_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode('utf-8'))
         if symbol not in data.get("symbols", {}):
             return None
         return data["symbols"][symbol]["current_price"]
@@ -83,142 +87,14 @@ def get_current_price(symbol):
         return None
 
 
-@st.cache_data(ttl=20, show_spinner=False)
-def fetch_live_options_data(symbol, expiration_date=None):
-    """جلب مباشر عبر بروكسي وسيط لتجاوز حجب Yahoo"""
-    try:
-        from curl_cffi import requests as curl_requests
-    except ImportError:
-        return None, None, None, None
-    
-    proxies = [
-        "https://corsproxy.io/?url=",
-        "https://api.allorigins.win/raw?url=",
-        "https://api.codetabs.com/v1/proxy?quest=",
-    ]
-    
-    def try_fetch(yahoo_url):
-        try:
-            session = curl_requests.Session(impersonate="chrome120")
-            r = session.get(yahoo_url, timeout=10)
-            if r.status_code == 200:
-                return r.json()
-        except Exception:
-            pass
-        
-        for proxy in proxies:
-            try:
-                proxied = proxy + yahoo_url
-                session = curl_requests.Session(impersonate="chrome120")
-                r = session.get(proxied, timeout=15)
-                if r.status_code == 200:
-                    return r.json()
-            except Exception:
-                continue
-        return None
-    
-    try:
-        current_price = None
-        for domain in ["query1", "query2"]:
-            data = try_fetch(f"https://{domain}.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d")
-            if data:
-                result = data.get('chart', {}).get('result', [])
-                if result:
-                    meta = result[0].get('meta', {})
-                    current_price = meta.get('regularMarketPrice')
-                    if current_price:
-                        break
-        
-        if not current_price:
-            return None, None, None, None
-        
-        expirations = []
-        for domain in ["query1", "query2"]:
-            data = try_fetch(f"https://{domain}.finance.yahoo.com/v7/finance/options/{symbol}")
-            if data:
-                ts_list = data.get('optionChain', {}).get('result', [{}])[0].get('expirationDates', [])
-                if ts_list:
-                    expirations = [datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d') for ts in ts_list]
-                    break
-        
-        if not expirations:
-            return None, None, None, None
-        
-        if expiration_date is None or expiration_date not in expirations:
-            expiration_date = expirations[0]
-        
-        calls_data, puts_data = [], []
-        for domain in ["query1", "query2"]:
-            exp_ts = int(datetime.datetime.strptime(expiration_date, "%Y-%m-%d").timestamp())
-            data = try_fetch(f"https://{domain}.finance.yahoo.com/v7/finance/options/{symbol}?date={exp_ts}")
-            if data:
-                result = data.get('optionChain', {}).get('result', [{}])[0]
-                calls_data = result.get('options', [{}])[0].get('calls', [])
-                puts_data = result.get('options', [{}])[0].get('puts', [])
-                if calls_data and puts_data:
-                    break
-        
-        if not calls_data or not puts_data:
-            return None, None, None, None
-        
-        calls_df = pd.DataFrame([{
-            'strike': c.get('strike', 0),
-            'openInterest': c.get('openInterest', 0) or 0,
-            'impliedVolatility': c.get('impliedVolatility', 0.001) or 0.001,
-        } for c in calls_data])
-        
-        puts_df = pd.DataFrame([{
-            'strike': p.get('strike', 0),
-            'openInterest': p.get('openInterest', 0) or 0,
-            'impliedVolatility': p.get('impliedVolatility', 0.001) or 0.001,
-        } for p in puts_data])
-        
-        df = pd.merge(
-            calls_df[['strike', 'openInterest', 'impliedVolatility']],
-            puts_df[['strike', 'openInterest', 'impliedVolatility']],
-            on='strike', how='outer', suffixes=('_call', '_put')
-        )
-        
-        df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
-                   'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
-        
-        total_oi = df['openInterest_call'] + df['openInterest_put']
-        df['weighted_IV'] = np.where(total_oi > 0,
-                                     (df['openInterest_call'] * df['impliedVolatility_call'] +
-                                      df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
-                                     (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
-        
-        exp_date_obj = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
-        days_to_exp = max((exp_date_obj - datetime.datetime.now()).days, 1)
-        T = days_to_exp / 365.0
-        
-        return float(current_price), expiration_date, df, float(T)
-    except Exception:
-        return None, None, None, None
-
-
+@st.cache_data(ttl=30)
 def fetch_options_data(symbol, expiration_date=None):
-    status, _ = get_market_status()
-    
-    if status == "open":
-        live_price, live_exp, live_df, live_T = fetch_live_options_data(symbol, expiration_date)
-        if live_df is not None and not live_df.empty:
-            st.session_state['data_source'] = 'live'
-            st.session_state['data_fetch_time'] = datetime.datetime.now()
-            return live_price, live_exp, live_df, live_T
-        else:
-            st.session_state['data_source'] = 'failed'
-    else:
-        st.session_state['data_source'] = 'closed'
-    
     try:
-        with open(DATA_FILE, "r") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        st.error("options_data.json not found.")
-        return None, None, None, None
+        req = urllib.request.Request(GITHUB_RAW_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read().decode('utf-8'))
     except Exception as e:
-        st.error(f"Error reading JSON: {e}")
+        st.error(f"❌ فشل قراءة البيانات من GitHub: {e}")
         return None, None, None, None
     
     if symbol not in data.get("symbols", {}):
@@ -837,17 +713,9 @@ def single_date_page(symbol):
     S = current_price
     q = 0.0
 
-    source = st.session_state.get('data_source', 'closed')
-    fetch_time = st.session_state.get('data_fetch_time', None)
     status, _ = get_market_status()
-    
-    if source == 'live':
-        time_str = fetch_time.strftime('%H:%M:%S') if fetch_time else ''
-        st.success(f"🟢 **بيانات مباشرة من السوق (Yahoo)** — آخر جلب: {time_str}")
-    elif source == 'failed' or (status == "open" and source != 'live'):
-        st.error("🔴 **فشل الجلب المباشر!** يتم عرض بيانات قديمة من GitHub. اضغط 'تحديث قسري'.")
-    else:
-        st.warning("🟡 **السوق مغلق** — عرض آخر بيانات محفوظة من GitHub Actions.")
+    market_status = "🟢 السوق مفتوح" if status == "open" else "🟡 السوق مغلق"
+    st.info(f"📊 البيانات من GitHub Actions — {market_status} — التحديث كل 30 ثانية")
 
     with st.sidebar:
         st.markdown("## الإعدادات")
@@ -862,9 +730,6 @@ def single_date_page(symbol):
         with col2:
             if st.button("تحديث قسري", width="stretch"):
                 st.cache_data.clear()
-                for key in ['data_source', 'data_fetch_time']:
-                    if key in st.session_state:
-                        del st.session_state[key]
                 st.rerun()
 
         if current_price is not None:
@@ -1281,12 +1146,12 @@ def main():
             time_diff = datetime.datetime.now() - last_update
             minutes_ago = int(time_diff.total_seconds() / 60)
             if minutes_ago < 60:
-                st.info(f"آخر تحديث للبيانات المحفوظة: قبل {minutes_ago} دقيقة ({last_update.strftime('%H:%M')})")
+                st.info(f"آخر تحديث للبيانات: قبل {minutes_ago} دقيقة ({last_update.strftime('%H:%M')})")
             else:
                 hours_ago = minutes_ago // 60
-                st.warning(f"آخر تحديث للبيانات المحفوظة: قبل {hours_ago} ساعة ({last_update.strftime('%H:%M')})")
+                st.warning(f"آخر تحديث للبيانات: قبل {hours_ago} ساعة ({last_update.strftime('%H:%M')})")
         except:
-            st.info(f"آخر تحديث محفوظ: {metadata['last_updated']}")
+            st.info(f"آخر تحديث: {metadata['last_updated']}")
 
     st.divider()
 
