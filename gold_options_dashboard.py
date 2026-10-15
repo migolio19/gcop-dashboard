@@ -12,7 +12,6 @@ import time
 import urllib.request
 import os
 from collections import deque
-import yfinance as yf
 
 st.set_page_config(page_title="رادار عادل للخيارات الكمية", layout="wide")
 
@@ -84,62 +83,92 @@ def get_current_price(symbol):
         return None
 
 
-@st.cache_data(ttl=45, show_spinner=False)
+@st.cache_data(ttl=20, show_spinner=False)
 def fetch_live_options_data(symbol, expiration_date=None):
-    """جلب البيانات مباشرة من Yahoo Finance (يتحدث كل 45 ثانية)"""
+    """جلب مباشر من Yahoo Finance API (بدون yfinance - أكثر موثوقية)"""
     try:
-        ticker = yf.Ticker(symbol)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
         
-        # ====== جلب السعر الحالي ======
+        # ============ 1. جلب السعر الحالي مباشرة ============
         current_price = None
+        quote_url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d"
         try:
-            info = ticker.fast_info
-            current_price = getattr(info, 'last_price', None)
-        except:
+            req = urllib.request.Request(quote_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.loads(r.read().decode('utf-8'))
+                result = data.get('chart', {}).get('result', [])
+                if result:
+                    meta = result[0].get('meta', {})
+                    current_price = meta.get('regularMarketPrice')
+                    if not current_price:
+                        indicators = result[0].get('indicators', {}).get('quote', [{}])[0]
+                        closes = indicators.get('close', [])
+                        closes = [c for c in closes if c is not None]
+                        if closes:
+                            current_price = closes[-1]
+        except Exception:
             pass
-        
-        if not current_price:
-            try:
-                hist = ticker.history(period='1d', interval='1m')
-                if not hist.empty:
-                    current_price = float(hist['Close'].iloc[-1])
-            except:
-                pass
-        
-        if not current_price:
-            try:
-                hist = ticker.history(period='5d')
-                if not hist.empty:
-                    current_price = float(hist['Close'].iloc[-1])
-            except:
-                pass
         
         if not current_price:
             return None, None, None, None
         
-        # ====== جلب تواريخ الانتهاء ======
-        expirations = ticker.options
+        # ============ 2. جلب تواريخ الانتهاء ============
+        expirations = []
+        try:
+            options_url = f"https://query1.finance.yahoo.com/v7/finance/options/{symbol}"
+            req = urllib.request.Request(options_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.loads(r.read().decode('utf-8'))
+                expirations_ts = data.get('optionChain', {}).get('result', [{}])[0].get('expirationDates', [])
+                expirations = [
+                    datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+                    for ts in expirations_ts
+                ]
+        except Exception:
+            pass
+        
         if not expirations:
             return None, None, None, None
         
         if expiration_date is None or expiration_date not in expirations:
             expiration_date = expirations[0]
         
-        # ====== جلب سلسلة الخيارات ======
-        chain = ticker.option_chain(expiration_date)
-        calls = chain.calls
-        puts = chain.puts
+        # ============ 3. جلب سلسلة الخيارات ============
+        try:
+            exp_ts = int(datetime.datetime.strptime(expiration_date, "%Y-%m-%d").timestamp())
+            chain_url = f"https://query1.finance.yahoo.com/v7/finance/options/{symbol}?date={exp_ts}"
+            req = urllib.request.Request(chain_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.loads(r.read().decode('utf-8'))
+                result = data.get('optionChain', {}).get('result', [{}])[0]
+                calls_data = result.get('options', [{}])[0].get('calls', [])
+                puts_data = result.get('options', [{}])[0].get('puts', [])
+        except Exception:
+            return None, None, None, None
         
-        # ====== حساب T ======
-        exp_date_obj = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
-        now = datetime.datetime.now()
-        days_to_exp = max((exp_date_obj - now).days, 1)
-        T = days_to_exp / 365.0
+        if not calls_data or not puts_data:
+            return None, None, None, None
         
-        # ====== بناء DataFrame ======
+        # ============ 4. بناء DataFrame ============
+        calls_df = pd.DataFrame([{
+            'strike': c.get('strike', 0),
+            'openInterest': c.get('openInterest', 0) or 0,
+            'impliedVolatility': c.get('impliedVolatility', 0.001) or 0.001,
+        } for c in calls_data])
+        
+        puts_df = pd.DataFrame([{
+            'strike': p.get('strike', 0),
+            'openInterest': p.get('openInterest', 0) or 0,
+            'impliedVolatility': p.get('impliedVolatility', 0.001) or 0.001,
+        } for p in puts_data])
+        
         df = pd.merge(
-            calls[['strike', 'openInterest', 'impliedVolatility']],
-            puts[['strike', 'openInterest', 'impliedVolatility']],
+            calls_df[['strike', 'openInterest', 'impliedVolatility']],
+            puts_df[['strike', 'openInterest', 'impliedVolatility']],
             on='strike', how='outer', suffixes=('_call', '_put')
         )
         
@@ -152,13 +181,19 @@ def fetch_live_options_data(symbol, expiration_date=None):
                                       df['openInterest_put'] * df['impliedVolatility_put']) / total_oi,
                                      (df['impliedVolatility_call'] + df['impliedVolatility_put']) / 2)
         
+        # ============ 5. حساب T ============
+        exp_date_obj = datetime.datetime.strptime(expiration_date, "%Y-%m-%d")
+        now = datetime.datetime.now()
+        days_to_exp = max((exp_date_obj - now).days, 1)
+        T = days_to_exp / 365.0
+        
         return float(current_price), expiration_date, df, float(T)
     except Exception:
         return None, None, None, None
 
 
 def fetch_options_data(symbol, expiration_date=None):
-    # ✅ محاولة الجلب المباشر أولاً عندما يكون السوق مفتوحاً
+    # ✅ محاولة الجلب المباشر أولاً
     status, _ = get_market_status()
     
     if status == "open":
@@ -167,9 +202,12 @@ def fetch_options_data(symbol, expiration_date=None):
             st.session_state['data_source'] = 'live'
             st.session_state['data_fetch_time'] = datetime.datetime.now()
             return live_price, live_exp, live_df, live_T
+        else:
+            st.session_state['data_source'] = 'failed'
+    else:
+        st.session_state['data_source'] = 'closed'
     
-    st.session_state['data_source'] = 'cached'
-    # ⬇️ الكود القديم (قراءة JSON) كـ fallback
+    # ⬇️ Fallback: قراءة JSON
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
@@ -528,7 +566,6 @@ def calculate_confluence_zones(df, S, max_gamma, max_vanna, settings):
 
 def create_combined_chart(zero_gamma_level, distance_to_zero_gamma, setup_signal,
                           gex_flow, zones, S, expiration_date, settings):
-    """رسم موحّد: تاريخ الانتهاء + جدول الإعدادات المتقدمة + Zero-Gamma + Confluence Zones"""
     fig = go.Figure()
     
     fig.update_xaxes(visible=False, range=[0, 1])
@@ -756,7 +793,6 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
                  call_strike, put_strike, call_iv, put_iv,
                  call_pct, put_pct,
                  y_range_mode="auto", y_range_manual=None):
-    """رسم IV Skew مع Auto-Scale + صفّين من الأرقام (الأساسية + Call/Put التفاصيل)"""
     fig = go.Figure()
     
     all_values = []
@@ -982,15 +1018,18 @@ def single_date_page(symbol):
     S = current_price
     q = 0.0
 
-    # ✅ مؤشر مصدر البيانات
-    source = st.session_state.get('data_source', 'cached')
+    # ✅ مؤشر مصدر البيانات (محسّن)
+    source = st.session_state.get('data_source', 'closed')
     fetch_time = st.session_state.get('data_fetch_time', None)
+    status, _ = get_market_status()
     
     if source == 'live':
         time_str = fetch_time.strftime('%H:%M:%S') if fetch_time else ''
-        st.success(f"🟢 **بيانات مباشرة من السوق** — آخر جلب: {time_str}")
+        st.success(f"🟢 **بيانات مباشرة من السوق (Yahoo API)** — آخر جلب: {time_str}")
+    elif source == 'failed' or (status == "open" and source != 'live'):
+        st.error("🔴 **فشل الجلب المباشر!** يتم عرض بيانات قديمة من GitHub. اضغط زر 'تحديث قسري'.")
     else:
-        st.warning("🟡 **بيانات محفوظة (GitHub Actions)** — سيتم التحديث عند فتح السوق")
+        st.warning("🟡 **السوق مغلق** — عرض آخر بيانات محفوظة من GitHub Actions.")
 
     with st.sidebar:
         st.markdown("## الإعدادات")
@@ -1006,6 +1045,10 @@ def single_date_page(symbol):
         with col2:
             if st.button("تحديث قسري", width="stretch"):
                 st.cache_data.clear()
+                # مسح جلسة البيانات أيضاً
+                for key in ['data_source', 'data_fetch_time']:
+                    if key in st.session_state:
+                        del st.session_state[key]
                 st.rerun()
 
         if current_price is not None:
