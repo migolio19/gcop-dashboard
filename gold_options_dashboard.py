@@ -1100,21 +1100,23 @@ def single_date_page(symbol):
         barmode='relative',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                     font=dict(color="white")),
-        height=730,
-        margin=dict(l=60, r=20, t=50, b=150)
+        height=650,
+        margin=dict(l=60, r=20, t=50, b=110)
     )
 
+    # ✅ سماكة الشريط أصبحت 0.035 (نصف السابق)
     fig_inv.update_xaxes(
         gridcolor='gray',
-        rangeslider=dict(visible=True, thickness=0.08),
+        rangeslider=dict(visible=True, thickness=0.035),
         range=x_range_inv,
         showticklabels=True
     )
     fig_inv.update_yaxes(gridcolor='gray', zeroline=True, zerolinecolor='white')
 
+    # ============ خط فاصل + الأرقام (مركزة تحت الشريط) ============
     fig_inv.add_shape(
         type="line",
-        x0=0.02, x1=0.98, y0=-0.20, y1=-0.20,
+        x0=0.02, x1=0.98, y0=-0.13, y1=-0.13,
         line=dict(color="#555", width=1),
         xref="paper", yref="paper"
     )
@@ -1131,15 +1133,17 @@ def single_date_page(symbol):
     metric_colors = ["white", "white", net_color, "white"]
 
     for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
+        # العنوان
         fig_inv.add_annotation(
-            x=pos, y=-0.20,
+            x=pos, y=-0.17,
             text=f"<b>{label}</b>",
             showarrow=False,
             font=dict(color="#9aa0a6", size=13),
             xref="paper", yref="paper"
         )
+        # القيمة (قريبة جداً من العنوان + منزلقة للوسط)
         fig_inv.add_annotation(
-            x=pos, y=-0.27,
+            x=pos, y=-0.24,
             text=f"<b>{value}</b>",
             showarrow=False,
             font=dict(color=color, size=26),
