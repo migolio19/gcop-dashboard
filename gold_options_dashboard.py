@@ -678,16 +678,77 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
     return fig
 
 
-def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
-    """رسم IV Skew مع الأرقام الأربعة داخل الرسم لتنزيلها كصورة PNG واحدة"""
+def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
+                 y_range_mode="auto", y_range_manual=None):
+    """رسم IV Skew مع Auto-Scale لمحور Y + نطاقات تحذيرية + خط الصفر"""
     fig = go.Figure()
     
+    # ============ حساب نطاق Y تلقائياً ============
+    all_values = []
+    if skew_history:
+        all_values.extend([v for v in skew_history if v is not None and not np.isnan(v)])
+    if sma_history:
+        all_values.extend([v for v in sma_history if v is not None and not np.isnan(v)])
+    
+    if all_values:
+        data_min = min(all_values)
+        data_max = max(all_values)
+        data_center = (data_min + data_max) / 2
+        data_span = max(data_max - data_min, 1e-4)
+        
+        padding = max(data_span * 0.3, abs(data_center) * 0.1, 1e-4)
+        auto_y_min = data_min - padding
+        auto_y_max = data_max + padding
+        
+        if data_span < 0.001:
+            auto_y_min = data_center - 0.005
+            auto_y_max = data_center + 0.005
+    else:
+        auto_y_min, auto_y_max = -0.1, 0.1
+    
+    # ============ نطاقات تحذيرية عند ±0.20 ============
+    threshold = 0.20
+    if auto_y_min < -threshold < auto_y_max:
+        fig.add_hrect(
+            y0=-threshold, y1=threshold,
+            fillcolor="rgba(0,255,0,0.04)",
+            line_width=0,
+            layer="below"
+        )
+    if auto_y_min < threshold:
+        fig.add_hrect(
+            y0=threshold, y1=auto_y_max,
+            fillcolor="rgba(255,255,0,0.06)",
+            line_width=0,
+            layer="below"
+        )
+    if auto_y_max > -threshold:
+        fig.add_hrect(
+            y0=auto_y_min, y1=-threshold,
+            fillcolor="rgba(255,255,0,0.06)",
+            line_width=0,
+            layer="below"
+        )
+    
+    # ============ خط الصفر ============
+    fig.add_hline(y=0, line_dash="solid", line_color="#666", line_width=1)
+    
+    # ============ خطوط ±0.20 (تحذيرية) ============
+    fig.add_hline(y=threshold, line_dash="dot", line_color="orange", opacity=0.5,
+                  annotation_text="+0.20", annotation_position="right",
+                  annotation_font=dict(color="orange", size=10))
+    fig.add_hline(y=-threshold, line_dash="dot", line_color="orange", opacity=0.5,
+                  annotation_text="-0.20", annotation_position="right",
+                  annotation_font=dict(color="orange", size=10))
+    
+    # ============ خطوط البيانات ============
     if skew_history:
         fig.add_trace(go.Scatter(
             x=list(range(len(skew_history))),
             y=skew_history,
-            mode='lines',
+            mode='lines+markers',
             line=dict(color='cyan', width=2),
+            marker=dict(size=5, color='cyan'),
             name='IV Skew'
         ))
     
@@ -697,16 +758,17 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
             y=sma_history,
             mode='lines',
             line=dict(color='orange', width=2, dash='dash'),
-            name='SMA 20'
+            name='SMA'
         ))
     
-    color = 'yellow' if abs(deviation) > 0.20 else 'white'
+    # ============ Badge المعلومات ============
+    color_badge = 'yellow' if abs(deviation) > 0.20 else 'white'
     fig.add_annotation(
-        x=0.5, y=0.95,
+        x=0.5, y=0.97,
         xref="paper", yref="paper",
         text=f"Skew: {current_skew:.4f} | SMA: {sma_value:.4f} | Dev: {deviation:.2%}",
         showarrow=False,
-        font=dict(color=color, size=12),
+        font=dict(color=color_badge, size=12),
         bgcolor="rgba(0,0,0,0.6)",
         borderpad=4
     )
@@ -752,18 +814,32 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation):
             xref="paper", yref="paper"
         )
     
+    # ============ تحديد نطاق Y النهائي ============
+    if y_range_mode == "auto":
+        final_y_min, final_y_max = auto_y_min, auto_y_max
+    elif y_range_mode == "manual" and y_range_manual is not None:
+        final_y_min, final_y_max = y_range_manual
+    else:
+        final_y_min, final_y_max = auto_y_min, auto_y_max
+    
     fig.update_layout(
-        title="IV Skew",
+        title="IV Skew (Auto-Scale)",
         yaxis_title="IV Spread",
         xaxis_title="Time",
         font=dict(color="white"),
         plot_bgcolor="#111",
         paper_bgcolor="#222",
         height=650,
-        margin=dict(l=10, r=10, t=40, b=150)
+        margin=dict(l=10, r=10, t=40, b=150),
+        showlegend=True,
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.02,
+            xanchor="right", x=1, font=dict(color="white")
+        )
     )
     fig.update_xaxes(gridcolor='gray')
-    fig.update_yaxes(gridcolor='gray')
+    fig.update_yaxes(gridcolor='gray', range=[final_y_min, final_y_max])
+    
     return fig
 
 
@@ -970,7 +1046,27 @@ def single_date_page(symbol):
     st.divider()
     st.subheader("📉 مؤشر انحراف التقلب (IV Skew)")
 
-    fig_skew = plot_iv_skew(skew_history, sma_history, skew_value, sma_value, deviation)
+    # ✅ التحكم في نطاق محور Y
+    col_ctrl1, col_ctrl2 = st.columns([3, 1])
+    with col_ctrl2:
+        auto_scale = st.checkbox("Auto-Scale تلقائي", value=True, key="iv_skew_auto")
+    
+    if not auto_scale:
+        with st.expander("⚙️ ضبط نطاق Y يدوياً", expanded=True):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                y_min_manual = st.number_input("الحد الأدنى", value=-0.05, step=0.01, key="iv_y_min")
+            with col_b:
+                y_max_manual = st.number_input("الحد الأعلى", value=0.10, step=0.01, key="iv_y_max")
+        y_range_manual = (y_min_manual, y_max_manual)
+    else:
+        y_range_manual = None
+    
+    fig_skew = plot_iv_skew(
+        skew_history, sma_history, skew_value, sma_value, deviation,
+        y_range_mode="auto" if auto_scale else "manual",
+        y_range_manual=y_range_manual
+    )
     st.plotly_chart(fig_skew, use_container_width=True, key="chart_iv_skew")
 
     with st.expander("📊 تفاصيل IV Skew"):
