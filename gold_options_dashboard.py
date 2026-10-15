@@ -679,9 +679,10 @@ def plot_metric_single(df, S, call_col, put_col, title, y_axis,
 
 
 def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
-                 call_strike, put_strike,
+                 call_strike, put_strike, call_iv, put_iv,
+                 call_pct, put_pct,
                  y_range_mode="auto", y_range_manual=None):
-    """رسم IV Skew مع Auto-Scale + 6 أرقام داخل الرسم (شاملة سعر التنفيذ)"""
+    """رسم IV Skew مع Auto-Scale + صفّين من الأرقام (الأساسية + Call/Put التفاصيل)"""
     fig = go.Figure()
     
     # ============ حساب نطاق Y تلقائياً ============
@@ -710,23 +711,14 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
     # ============ نطاقات تحذيرية عند ±0.20 ============
     threshold = 0.20
     if auto_y_min < -threshold < auto_y_max:
-        fig.add_hrect(
-            y0=-threshold, y1=threshold,
-            fillcolor="rgba(0,255,0,0.04)",
-            line_width=0, layer="below"
-        )
+        fig.add_hrect(y0=-threshold, y1=threshold, fillcolor="rgba(0,255,0,0.04)",
+                      line_width=0, layer="below")
     if auto_y_min < threshold:
-        fig.add_hrect(
-            y0=threshold, y1=auto_y_max,
-            fillcolor="rgba(255,255,0,0.06)",
-            line_width=0, layer="below"
-        )
+        fig.add_hrect(y0=threshold, y1=auto_y_max, fillcolor="rgba(255,255,0,0.06)",
+                      line_width=0, layer="below")
     if auto_y_max > -threshold:
-        fig.add_hrect(
-            y0=auto_y_min, y1=-threshold,
-            fillcolor="rgba(255,255,0,0.06)",
-            line_width=0, layer="below"
-        )
+        fig.add_hrect(y0=auto_y_min, y1=-threshold, fillcolor="rgba(255,255,0,0.06)",
+                      line_width=0, layer="below")
     
     # ============ خط الصفر وخطوط ±0.20 ============
     fig.add_hline(y=0, line_dash="solid", line_color="#666", line_width=1)
@@ -740,93 +732,105 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
     # ============ خطوط البيانات ============
     if skew_history:
         fig.add_trace(go.Scatter(
-            x=list(range(len(skew_history))),
-            y=skew_history,
-            mode='lines+markers',
-            line=dict(color='cyan', width=2),
-            marker=dict(size=5, color='cyan'),
-            name='IV Skew'
+            x=list(range(len(skew_history))), y=skew_history,
+            mode='lines+markers', line=dict(color='cyan', width=2),
+            marker=dict(size=5, color='cyan'), name='IV Skew'
         ))
     
     if sma_history:
         fig.add_trace(go.Scatter(
-            x=list(range(len(sma_history))),
-            y=sma_history,
-            mode='lines',
-            line=dict(color='orange', width=2, dash='dash'),
-            name='SMA'
+            x=list(range(len(sma_history))), y=sma_history,
+            mode='lines', line=dict(color='orange', width=2, dash='dash'), name='SMA'
         ))
     
-    # ============ Badge المعلومات ============
+    # ============ Badge ============
     color_badge = 'yellow' if abs(deviation) > 0.20 else 'white'
     fig.add_annotation(
-        x=0.5, y=0.97,
-        xref="paper", yref="paper",
+        x=0.5, y=0.97, xref="paper", yref="paper",
         text=f"Skew: {current_skew:.4f} | SMA: {sma_value:.4f} | Dev: {deviation:.2%}",
-        showarrow=False,
-        font=dict(color=color_badge, size=12),
-        bgcolor="rgba(0,0,0,0.6)",
-        borderpad=4
+        showarrow=False, font=dict(color=color_badge, size=12),
+        bgcolor="rgba(0,0,0,0.6)", borderpad=4
     )
     
-    # ============ الأرقام الستة داخل الرسم ============
+    # ====================================================================
+    # ============ الصف الأول: الأرقام الأساسية (4 أرقام) ============
+    # ====================================================================
     deviation_pct = deviation * 100
     is_abnormal = abs(deviation) > 0.20
     
-    metric_positions = [0.083, 0.25, 0.417, 0.583, 0.75, 0.917]
-    metric_labels = [
-        "📊 IV Skew الحالي",
-        "📈 SMA 20",
-        "📉 الانحراف",
-        "🎯 حالة الانحراف",
-        "📍 سعر تنفيذ Call",
-        "📍 سعر تنفيذ Put"
-    ]
-    metric_values = [
+    row1_positions = [0.125, 0.375, 0.625, 0.875]
+    row1_labels = ["📊 IV Skew الحالي", "📈 المتوسط (SMA 20)", "📉 الانحراف عن المتوسط", "🎯 حالة الانحراف"]
+    row1_values = [
         f"{current_skew:.4f}",
         f"{sma_value:.4f}",
         f"{deviation_pct:.2f}%",
-        "⚠️ غير طبيعي" if is_abnormal else "✅ طبيعي",
-        f"${call_strike:.2f}",
-        f"${put_strike:.2f}"
+        "⚠️ غير طبيعي" if is_abnormal else "✅ طبيعي"
     ]
-    
     dev_color = "yellow" if is_abnormal else "white"
     state_color = "yellow" if is_abnormal else "limegreen"
-    metric_colors = [
-        "white",       # IV Skew
-        "white",       # SMA
-        dev_color,     # Deviation
-        state_color,   # State
-        "limegreen",   # Call Strike 🟢
-        "crimson"      # Put Strike 🔴
-    ]
+    row1_colors = ["white", "white", dev_color, state_color]
     
     fig.add_shape(
-        type="line",
-        x0=0.02, x1=0.98, y0=-0.14, y1=-0.14,
-        line=dict(color="#555", width=1),
-        xref="paper", yref="paper"
+        type="line", x0=0.02, x1=0.98, y0=-0.14, y1=-0.14,
+        line=dict(color="#555", width=1), xref="paper", yref="paper"
     )
     
-    for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
+    for pos, label, value, color in zip(row1_positions, row1_labels, row1_values, row1_colors):
         fig.add_annotation(
-            x=pos, y=-0.22,
-            text=f"<b>{label}</b>",
-            showarrow=False,
-            font=dict(color="#9aa0a6", size=11),
-            xref="paper", yref="paper"
+            x=pos, y=-0.22, text=f"<b>{label}</b>", showarrow=False,
+            font=dict(color="#9aa0a6", size=13), xref="paper", yref="paper"
         )
-        if "حالة" in label:
-            font_size = 20
-        else:
-            font_size = 24
+        font_size = 22 if "حالة" in label else 26
         fig.add_annotation(
-            x=pos, y=-0.32,
-            text=f"<b>{value}</b>",
-            showarrow=False,
-            font=dict(color=color, size=font_size),
-            xref="paper", yref="paper"
+            x=pos, y=-0.32, text=f"<b>{value}</b>", showarrow=False,
+            font=dict(color=color, size=font_size), xref="paper", yref="paper"
+        )
+    
+    # ====================================================================
+    # ============ خط فاصل بين الصفين ============
+    # ====================================================================
+    fig.add_shape(
+        type="line", x0=0.02, x1=0.98, y0=-0.42, y1=-0.42,
+        line=dict(color="#555", width=1), xref="paper", yref="paper"
+    )
+    
+    # ====================================================================
+    # ============ الصف الثاني: تفاصيل Call و Put (6 أرقام) ============
+    # ====================================================================
+    row2_positions = [0.083, 0.25, 0.417, 0.583, 0.75, 0.917]
+    row2_labels = [
+        "📍 سعر تنفيذ Call",
+        "📊 نسبة Call %",
+        "🌊 IV Call",
+        "📍 سعر تنفيذ Put",
+        "📊 نسبة Put %",
+        "🌊 IV Put"
+    ]
+    row2_values = [
+        f"${call_strike:.2f}",
+        f"{call_pct:.0%}",
+        f"{call_iv:.4f}",
+        f"${put_strike:.2f}",
+        f"{put_pct:.0%}",
+        f"{put_iv:.4f}"
+    ]
+    row2_colors = [
+        "limegreen",   # Call Strike
+        "limegreen",   # Call %
+        "limegreen",   # Call IV
+        "crimson",     # Put Strike
+        "crimson",     # Put %
+        "crimson"      # Put IV
+    ]
+    
+    for pos, label, value, color in zip(row2_positions, row2_labels, row2_values, row2_colors):
+        fig.add_annotation(
+            x=pos, y=-0.50, text=f"<b>{label}</b>", showarrow=False,
+            font=dict(color="#9aa0a6", size=11), xref="paper", yref="paper"
+        )
+        fig.add_annotation(
+            x=pos, y=-0.60, text=f"<b>{value}</b>", showarrow=False,
+            font=dict(color=color, size=22), xref="paper", yref="paper"
         )
     
     # ============ تحديد نطاق Y النهائي ============
@@ -844,13 +848,11 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         font=dict(color="white"),
         plot_bgcolor="#111",
         paper_bgcolor="#222",
-        height=650,
-        margin=dict(l=10, r=10, t=40, b=150),
+        height=850,
+        margin=dict(l=10, r=10, t=40, b=270),
         showlegend=True,
-        legend=dict(
-            orientation="h", yanchor="bottom", y=1.02,
-            xanchor="right", x=1, font=dict(color="white")
-        )
+        legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                    xanchor="right", x=1, font=dict(color="white"))
     )
     fig.update_xaxes(gridcolor='gray')
     fig.update_yaxes(gridcolor='gray', range=[final_y_min, final_y_max])
@@ -1078,7 +1080,8 @@ def single_date_page(symbol):
     
     fig_skew = plot_iv_skew(
         skew_history, sma_history, skew_value, sma_value, deviation,
-        call_strike, put_strike,
+        call_strike, put_strike, call_iv, put_iv,
+        settings['iv_skew_call_pct'], settings['iv_skew_put_pct'],
         y_range_mode="auto" if auto_scale else "manual",
         y_range_manual=y_range_manual
     )
