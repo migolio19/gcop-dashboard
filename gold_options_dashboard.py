@@ -1100,11 +1100,10 @@ def single_date_page(symbol):
         barmode='relative',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                     font=dict(color="white")),
-        height=850,
-        margin=dict(l=60, r=20, t=50, b=230)
+        height=730,
+        margin=dict(l=60, r=20, t=50, b=150)
     )
 
-    # ✅ إرجاع شريط التمرير
     fig_inv.update_xaxes(
         gridcolor='gray',
         rangeslider=dict(visible=True, thickness=0.08),
@@ -1113,7 +1112,6 @@ def single_date_page(symbol):
     )
     fig_inv.update_yaxes(gridcolor='gray', zeroline=True, zerolinecolor='white')
 
-    # ============ خط فاصل + الأرقام أسفل شريط التمرير ============
     fig_inv.add_shape(
         type="line",
         x0=0.02, x1=0.98, y0=-0.20, y1=-0.20,
@@ -1134,22 +1132,21 @@ def single_date_page(symbol):
 
     for pos, label, value, color in zip(metric_positions, metric_labels, metric_values, metric_colors):
         fig_inv.add_annotation(
-            x=pos, y=-0.245,
+            x=pos, y=-0.20,
             text=f"<b>{label}</b>",
             showarrow=False,
             font=dict(color="#9aa0a6", size=13),
             xref="paper", yref="paper"
         )
         fig_inv.add_annotation(
-            x=pos, y=-0.30,
+            x=pos, y=-0.27,
             text=f"<b>{value}</b>",
             showarrow=False,
-            font=dict(color=color, size=28),
+            font=dict(color=color, size=26),
             xref="paper", yref="paper"
         )
 
     st.plotly_chart(fig_inv, use_container_width=True, key="chart_inventory")
-    st.caption("💡 لحفظ الرسم + الإحصائيات كصورة PNG واحدة، اضغط على أيقونة الكاميرا 📷 أعلى الرسم.")
 
     st.divider()
     csv_data_all = df_sorted.to_csv(index=False).encode('utf-8')
