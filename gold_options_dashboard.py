@@ -753,7 +753,7 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
     )
     
     # ====================================================================
-    # ============ الصف الأول: الأرقام الأساسية (4 أرقام) ============
+    # ✅ الصف الأول: الأرقام الأساسية (4 أرقام)
     # ====================================================================
     deviation_pct = deviation * 100
     is_abnormal = abs(deviation) > 0.20
@@ -771,31 +771,31 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
     row1_colors = ["white", "white", dev_color, state_color]
     
     fig.add_shape(
-        type="line", x0=0.02, x1=0.98, y0=-0.14, y1=-0.14,
+        type="line", x0=0.02, x1=0.98, y0=-0.10, y1=-0.10,
         line=dict(color="#555", width=1), xref="paper", yref="paper"
     )
     
     for pos, label, value, color in zip(row1_positions, row1_labels, row1_values, row1_colors):
         fig.add_annotation(
-            x=pos, y=-0.22, text=f"<b>{label}</b>", showarrow=False,
+            x=pos, y=-0.16, text=f"<b>{label}</b>", showarrow=False,
             font=dict(color="#9aa0a6", size=13), xref="paper", yref="paper"
         )
         font_size = 22 if "حالة" in label else 26
         fig.add_annotation(
-            x=pos, y=-0.32, text=f"<b>{value}</b>", showarrow=False,
+            x=pos, y=-0.23, text=f"<b>{value}</b>", showarrow=False,
             font=dict(color=color, size=font_size), xref="paper", yref="paper"
         )
     
     # ====================================================================
-    # ============ خط فاصل بين الصفين ============
+    # ✅ خط فاصل بين الصفين
     # ====================================================================
     fig.add_shape(
-        type="line", x0=0.02, x1=0.98, y0=-0.42, y1=-0.42,
+        type="line", x0=0.02, x1=0.98, y0=-0.30, y1=-0.30,
         line=dict(color="#555", width=1), xref="paper", yref="paper"
     )
     
     # ====================================================================
-    # ============ الصف الثاني: تفاصيل Call و Put (6 أرقام) ============
+    # ✅ الصف الثاني: تفاصيل Call و Put (6 أرقام)
     # ====================================================================
     row2_positions = [0.083, 0.25, 0.417, 0.583, 0.75, 0.917]
     row2_labels = [
@@ -815,21 +815,17 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         f"{put_iv:.4f}"
     ]
     row2_colors = [
-        "limegreen",   # Call Strike
-        "limegreen",   # Call %
-        "limegreen",   # Call IV
-        "crimson",     # Put Strike
-        "crimson",     # Put %
-        "crimson"      # Put IV
+        "limegreen", "limegreen", "limegreen",
+        "crimson", "crimson", "crimson"
     ]
     
     for pos, label, value, color in zip(row2_positions, row2_labels, row2_values, row2_colors):
         fig.add_annotation(
-            x=pos, y=-0.50, text=f"<b>{label}</b>", showarrow=False,
+            x=pos, y=-0.36, text=f"<b>{label}</b>", showarrow=False,
             font=dict(color="#9aa0a6", size=11), xref="paper", yref="paper"
         )
         fig.add_annotation(
-            x=pos, y=-0.60, text=f"<b>{value}</b>", showarrow=False,
+            x=pos, y=-0.42, text=f"<b>{value}</b>", showarrow=False,
             font=dict(color=color, size=22), xref="paper", yref="paper"
         )
     
@@ -848,8 +844,8 @@ def plot_iv_skew(skew_history, sma_history, current_skew, sma_value, deviation,
         font=dict(color="white"),
         plot_bgcolor="#111",
         paper_bgcolor="#222",
-        height=850,
-        margin=dict(l=10, r=10, t=40, b=270),
+        height=700,
+        margin=dict(l=10, r=10, t=40, b=200),
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.02,
                     xanchor="right", x=1, font=dict(color="white"))
