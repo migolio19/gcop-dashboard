@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-16T06:00:26.178134",
+  "last_updated": "2026-10-16T06:05:20.081367",
   "symbols": {
     "GLD": {
       "current_price": 382.7099914550781,
@@ -1707,17 +1707,17 @@
             {
               "strike": 530.0,
               "openInterest": 0.0,
-              "impliedVolatility": 4.841312542114257
+              "impliedVolatility": 1.0000000000000003e-05
             },
             {
               "strike": 535.0,
               "openInterest": 0.0,
-              "impliedVolatility": 4.906253867187499
+              "impliedVolatility": 1.0000000000000003e-05
             },
             {
               "strike": 540.0,
               "openInterest": 0.0,
-              "impliedVolatility": 5.031741991577148
+              "impliedVolatility": 1.0000000000000003e-05
             },
             {
               "strike": 545.0,
@@ -3115,7 +3115,7 @@
             },
             {
               "strike": 340.0,
-              "openInterest": 1.0,
+              "openInterest": 0.0,
               "impliedVolatility": 1.0000000000000003e-05
             },
             {
@@ -8067,12 +8067,12 @@
             {
               "strike": 4700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 4.939884196243286
+              "impliedVolatility": 4.67651782623291
             },
             {
               "strike": 4750.0,
               "openInterest": 0.0,
-              "impliedVolatility": 4.895389622955322
+              "impliedVolatility": 4.739139818267822
             },
             {
               "strike": 4800.0,
@@ -8087,7 +8087,7 @@
             {
               "strike": 4900.0,
               "openInterest": 0.0,
-              "impliedVolatility": 4.424626051254272
+              "impliedVolatility": 4.399540633392334
             },
             {
               "strike": 4975.0,
@@ -8117,7 +8117,7 @@
             {
               "strike": 5150.0,
               "openInterest": 0.0,
-              "impliedVolatility": 4.0234424707031256
+              "impliedVolatility": 4.010869244232178
             },
             {
               "strike": 5200.0,
@@ -8127,7 +8127,7 @@
             {
               "strike": 5250.0,
               "openInterest": 0.0,
-              "impliedVolatility": 3.8311771798706054
+              "impliedVolatility": 3.8087162985229495
             },
             {
               "strike": 5275.0,
@@ -8137,7 +8137,7 @@
             {
               "strike": 5300.0,
               "openInterest": 0.0,
-              "impliedVolatility": 3.8884280133056643
+              "impliedVolatility": 3.6821297009277347
             },
             {
               "strike": 5350.0,
@@ -8157,7 +8157,7 @@
             {
               "strike": 5500.0,
               "openInterest": 0.0,
-              "impliedVolatility": 3.5601817636108395
+              "impliedVolatility": 3.370301867218017
             },
             {
               "strike": 5525.0,
@@ -8167,7 +8167,7 @@
             {
               "strike": 5550.0,
               "openInterest": 0.0,
-              "impliedVolatility": 3.4796155587768554
+              "impliedVolatility": 3.293092587585449
             },
             {
               "strike": 5575.0,
@@ -8177,7 +8177,7 @@
             {
               "strike": 5600.0,
               "openInterest": 0.0,
-              "impliedVolatility": 3.3995986689758295
+              "impliedVolatility": 3.2440204446411127
             },
             {
               "strike": 5625.0,
@@ -8191,7 +8191,7 @@
             },
             {
               "strike": 5675.0,
-              "openInterest": 1.0,
+              "openInterest": 0.0,
               "impliedVolatility": 1.0000000000000003e-05
             },
             {
@@ -8212,7 +8212,7 @@
             {
               "strike": 5800.0,
               "openInterest": 0.0,
-              "impliedVolatility": 3.084719085083008
+              "impliedVolatility": 3.0278344616699218
             },
             {
               "strike": 5825.0,
@@ -8227,17 +8227,17 @@
             {
               "strike": 5900.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.8172026640319823
+              "impliedVolatility": 2.7995025129699713
             },
             {
               "strike": 5925.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.793337977600098
+              "impliedVolatility": 2.779971311798096
             },
             {
               "strike": 5950.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.7485382849121094
+              "impliedVolatility": 2.7313264138793945
             },
             {
               "strike": 5975.0,
@@ -8247,7 +8247,7 @@
             {
               "strike": 6000.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.7740509164428713
+              "impliedVolatility": 2.724856703491211
             },
             {
               "strike": 6025.0,
@@ -8277,7 +8277,7 @@
             {
               "strike": 6130.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.476810448608399
+              "impliedVolatility": 2.4606972076416014
             },
             {
               "strike": 6140.0,
@@ -8302,7 +8302,7 @@
             {
               "strike": 6175.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.4201089302062986
+              "impliedVolatility": 2.438724606323242
             },
             {
               "strike": 6180.0,
@@ -8317,7 +8317,7 @@
             {
               "strike": 6200.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.3787882327270506
+              "impliedVolatility": 2.359745311584472
             },
             {
               "strike": 6210.0,
@@ -8342,12 +8342,12 @@
             {
               "strike": 6240.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.3176921940612787
+              "impliedVolatility": 2.302372408142089
             },
             {
               "strike": 6250.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.303287933197021
+              "impliedVolatility": 2.2880902172851565
             },
             {
               "strike": 6260.0,
@@ -8357,7 +8357,7 @@
             {
               "strike": 6270.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.2893109173583985
+              "impliedVolatility": 2.299015482940674
             },
             {
               "strike": 6275.0,
@@ -8367,7 +8367,7 @@
             {
               "strike": 6280.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.2634931108093257
+              "impliedVolatility": 2.2451826097106924
             },
             {
               "strike": 6290.0,
@@ -8397,17 +8397,17 @@
             {
               "strike": 6340.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.2042281222534172
+              "impliedVolatility": 2.1854903761291506
             },
             {
               "strike": 6350.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.163273634796143
+              "impliedVolatility": 2.1455734837341307
             },
             {
               "strike": 6360.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.1489914439392086
+              "impliedVolatility": 2.1313523278808595
             },
             {
               "strike": 6370.0,
@@ -8417,7 +8417,7 @@
             {
               "strike": 6375.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.1276291926574706
+              "impliedVolatility": 2.110112146606445
             },
             {
               "strike": 6380.0,
@@ -8432,7 +8432,7 @@
             {
               "strike": 6400.0,
               "openInterest": 0.0,
-              "impliedVolatility": 2.178105140686035
+              "impliedVolatility": 2.137028583221435
             },
             {
               "strike": 6410.0,
@@ -8567,7 +8567,7 @@
             {
               "strike": 6625.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.7741710510253905
+              "impliedVolatility": 1.761658906555176
             },
             {
               "strike": 6630.0,
@@ -8592,7 +8592,7 @@
             {
               "strike": 6670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.7110304975891113
+              "impliedVolatility": 1.6988540447998048
             },
             {
               "strike": 6675.0,
@@ -8607,7 +8607,7 @@
             {
               "strike": 6700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.7433484512329103
+              "impliedVolatility": 1.7072158193969726
             },
             {
               "strike": 6710.0,
@@ -8622,7 +8622,7 @@
             {
               "strike": 6725.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.6352862474060055
+              "impliedVolatility": 1.6209125399780273
             },
             {
               "strike": 6730.0,
@@ -8632,7 +8632,7 @@
             {
               "strike": 6740.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.6206684005737304
+              "impliedVolatility": 1.6369036709594726
             },
             {
               "strike": 6750.0,
@@ -8682,7 +8682,7 @@
             {
               "strike": 6825.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.4929834921264646
+              "impliedVolatility": 1.481936184082031
             },
             {
               "strike": 6830.0,
@@ -8697,12 +8697,12 @@
             {
               "strike": 6850.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.4711024980163572
+              "impliedVolatility": 1.4734523397827148
             },
             {
               "strike": 6860.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.4464749356079105
+              "impliedVolatility": 1.433291407775879
             },
             {
               "strike": 6870.0,
@@ -8712,12 +8712,12 @@
             {
               "strike": 6875.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.425539981689453
+              "impliedVolatility": 1.4124785235595703
             },
             {
               "strike": 6880.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.4162016494750977
+              "impliedVolatility": 1.4055205505371093
             },
             {
               "strike": 6890.0,
@@ -8727,7 +8727,7 @@
             {
               "strike": 6900.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.3951751432800292
+              "impliedVolatility": 1.3847687011718748
             },
             {
               "strike": 6905.0,
@@ -8752,27 +8752,27 @@
             {
               "strike": 6930.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.3575776750183104
+              "impliedVolatility": 1.3641999563598635
             },
             {
               "strike": 6940.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.3368868605041502
+              "impliedVolatility": 1.3244662683105468
             },
             {
               "strike": 6950.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.322879362182617
+              "impliedVolatility": 1.3105503222656247
             },
             {
               "strike": 6960.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.3088413464355466
+              "impliedVolatility": 1.296634376220703
             },
             {
               "strike": 6970.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.3358187506103512
+              "impliedVolatility": 1.2959324754333494
             },
             {
               "strike": 6975.0,
@@ -8782,12 +8782,12 @@
             {
               "strike": 6980.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.2808263497924801
+              "impliedVolatility": 1.268802484130859
             },
             {
               "strike": 6990.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.2710912910461425
+              "impliedVolatility": 1.298099212646484
             },
             {
               "strike": 6995.0,
@@ -8807,7 +8807,7 @@
             {
               "strike": 7010.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.245059927062988
+              "impliedVolatility": 1.2387428199768065
             },
             {
               "strike": 7020.0,
@@ -8827,7 +8827,7 @@
             {
               "strike": 7035.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.2118569680786133
+              "impliedVolatility": 1.2269630937194824
             },
             {
               "strike": 7040.0,
@@ -8837,7 +8837,7 @@
             {
               "strike": 7050.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.1896707997131346
+              "impliedVolatility": 1.1856119821166993
             },
             {
               "strike": 7060.0,
@@ -8852,12 +8852,12 @@
             {
               "strike": 7075.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.1473431304931638
+              "impliedVolatility": 1.1362042701721193
             },
             {
               "strike": 7080.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.1433148303222658
+              "impliedVolatility": 1.1352887474060058
             },
             {
               "strike": 7090.0,
@@ -8867,7 +8867,7 @@
             {
               "strike": 7100.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.167118422241211
+              "impliedVolatility": 1.0889938128662109
             },
             {
               "strike": 7105.0,
@@ -8882,7 +8882,7 @@
             {
               "strike": 7120.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.0838668853759765
+              "impliedVolatility": 1.0731247515869142
             },
             {
               "strike": 7125.0,
@@ -8952,17 +8952,17 @@
             {
               "strike": 7195.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9774782525634766
+              "impliedVolatility": 0.9683841052246094
             },
             {
               "strike": 7200.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9685672088623047
+              "impliedVolatility": 0.9853517089843751
             },
             {
               "strike": 7205.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9623416851806641
+              "impliedVolatility": 0.9533085723876953
             },
             {
               "strike": 7210.0,
@@ -8997,7 +8997,7 @@
             {
               "strike": 7240.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9114388739013672
+              "impliedVolatility": 0.9027109338378907
             },
             {
               "strike": 7245.0,
@@ -9032,12 +9032,12 @@
             {
               "strike": 7275.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8686536572265625
+              "impliedVolatility": 0.8670057244873046
             },
             {
               "strike": 7280.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8540053662109376
+              "impliedVolatility": 0.8456131161499022
             },
             {
               "strike": 7285.0,
@@ -9057,12 +9057,12 @@
             {
               "strike": 7300.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8283403396606445
+              "impliedVolatility": 0.8267229241943357
             },
             {
               "strike": 7305.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8178729150390623
+              "impliedVolatility": 0.809724803161621
             },
             {
               "strike": 7310.0,
@@ -9072,7 +9072,7 @@
             {
               "strike": 7315.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8033772103881834
+              "impliedVolatility": 0.7953206503295899
             },
             {
               "strike": 7320.0,
@@ -9082,7 +9082,7 @@
             {
               "strike": 7325.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7958699612426757
+              "impliedVolatility": 0.793520131225586
             },
             {
               "strike": 7330.0,
@@ -9102,12 +9102,12 @@
             {
               "strike": 7345.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7642540664672851
+              "impliedVolatility": 0.7596764755249025
             },
             {
               "strike": 7350.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7981587567138673
+              "impliedVolatility": 0.7717918328857423
             },
             {
               "strike": 7355.0,
@@ -9117,17 +9117,17 @@
             {
               "strike": 7360.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7377040390014648
+              "impliedVolatility": 0.7300747207641601
             },
             {
               "strike": 7365.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7303493762207032
+              "impliedVolatility": 0.7227810925292968
             },
             {
               "strike": 7370.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7229947134399414
+              "impliedVolatility": 0.7162198788452149
             },
             {
               "strike": 7375.0,
@@ -9142,12 +9142,12 @@
             {
               "strike": 7385.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7008696905517577
+              "impliedVolatility": 0.6942474423217774
             },
             {
               "strike": 7390.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6934845104980469
+              "impliedVolatility": 0.6868927795410158
             },
             {
               "strike": 7395.0,
@@ -9157,7 +9157,7 @@
             {
               "strike": 7400.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6786531158447267
+              "impliedVolatility": 0.6721529367065432
             },
             {
               "strike": 7405.0,
@@ -9177,7 +9177,7 @@
             {
               "strike": 7420.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6530186065673829
+              "impliedVolatility": 0.64883774017334
             },
             {
               "strike": 7425.0,
@@ -9192,12 +9192,12 @@
             {
               "strike": 7435.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6304358245849608
+              "impliedVolatility": 0.6443974769592287
             },
             {
               "strike": 7440.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6188392608642579
+              "impliedVolatility": 0.6126747717285157
             },
             {
               "strike": 7445.0,
@@ -9212,17 +9212,17 @@
             {
               "strike": 7455.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5961649270629883
+              "impliedVolatility": 0.5901530242919923
             },
             {
               "strike": 7460.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5885661260986328
+              "impliedVolatility": 0.5826152578735352
             },
             {
               "strike": 7465.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5809673251342774
+              "impliedVolatility": 0.5750469741821288
             },
             {
               "strike": 7470.0,
@@ -9232,22 +9232,22 @@
             {
               "strike": 7475.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5714459359741212
+              "impliedVolatility": 0.5657086886596681
             },
             {
               "strike": 7480.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5593305786132813
+              "impliedVolatility": 0.5535628140258789
             },
             {
               "strike": 7485.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.550358500366211
+              "impliedVolatility": 0.544651770324707
             },
             {
               "strike": 7490.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.542668147583008
+              "impliedVolatility": 0.5369919348144532
             },
             {
               "strike": 7495.0,
@@ -9262,12 +9262,12 @@
             {
               "strike": 7505.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5206804524230957
+              "impliedVolatility": 0.5139208764648437
             },
             {
               "strike": 7510.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.512272943725586
+              "impliedVolatility": 0.5141039801025391
             },
             {
               "strike": 7515.0,
@@ -9282,12 +9282,12 @@
             {
               "strike": 7525.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6128578753662111
+              "impliedVolatility": 0.5003712072753908
             },
             {
               "strike": 7530.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6039468316650394
+              "impliedVolatility": 0.6048776084899903
             },
             {
               "strike": 7535.0,
@@ -9302,12 +9302,12 @@
             {
               "strike": 7545.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5788616333007812
+              "impliedVolatility": 0.5797771514892578
             },
             {
               "strike": 7550.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.4612480633544922
+              "impliedVolatility": 0.46664962066650395
             },
             {
               "strike": 7555.0,
@@ -9322,12 +9322,12 @@
             {
               "strike": 7565.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.43565932998657225
+              "impliedVolatility": 0.44508916732788084
             },
             {
               "strike": 7570.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.4274196662902832
+              "impliedVolatility": 0.4336604486083985
             },
             {
               "strike": 7575.0,
@@ -9347,7 +9347,7 @@
             {
               "strike": 7590.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.3931029928588867
+              "impliedVolatility": 0.40106800109863283
             },
             {
               "strike": 7595.0,
@@ -9372,12 +9372,12 @@
             {
               "strike": 7615.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.35240820938110345
+              "impliedVolatility": 0.36081571807861323
             },
             {
               "strike": 7620.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.3455723402404785
+              "impliedVolatility": 0.3538577798461914
             },
             {
               "strike": 7625.0,
@@ -9392,12 +9392,12 @@
             {
               "strike": 7635.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.31903757141113276
+              "impliedVolatility": 0.3270178382873535
             },
             {
               "strike": 7640.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.31095049407958975
+              "impliedVolatility": 0.3170692073059082
             },
             {
               "strike": 7645.0,
@@ -9412,22 +9412,22 @@
             {
               "strike": 7655.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2868723657226562
+              "impliedVolatility": 0.29103797348022453
             },
             {
               "strike": 7660.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.278327529296875
+              "impliedVolatility": 0.2856821920776367
             },
             {
               "strike": 7665.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.27046933151245117
+              "impliedVolatility": 0.27768666656494134
             },
             {
               "strike": 7670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.25925423370361333
+              "impliedVolatility": 0.26639527557373044
             },
             {
               "strike": 7675.0,
@@ -9437,17 +9437,17 @@
             {
               "strike": 7680.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.24434654586791993
+              "impliedVolatility": 0.2504500004577636
             },
             {
               "strike": 7685.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.23880766082763671
+              "impliedVolatility": 0.24179835357666019
             },
             {
               "strike": 7690.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.23075110076904298
+              "impliedVolatility": 0.23659515853881835
             },
             {
               "strike": 7695.0,
@@ -9467,7 +9467,7 @@
             {
               "strike": 7710.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2025683992004394
+              "impliedVolatility": 0.2066119378662109
             },
             {
               "strike": 7715.0,
@@ -9482,7 +9482,7 @@
             {
               "strike": 7725.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1826101026916504
+              "impliedVolatility": 0.18645527908325193
             },
             {
               "strike": 7730.0,
@@ -9492,7 +9492,7 @@
             {
               "strike": 7735.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17223422988891607
+              "impliedVolatility": 0.17472138763427736
             },
             {
               "strike": 7740.0,
@@ -9502,7 +9502,7 @@
             {
               "strike": 7745.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.16179732254028317
+              "impliedVolatility": 0.1642692216491699
             },
             {
               "strike": 7750.0,
@@ -9517,22 +9517,22 @@
             {
               "strike": 7760.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15038386245727542
+              "impliedVolatility": 0.15293968406677252
             },
             {
               "strike": 7765.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14710325561523438
+              "impliedVolatility": 0.14907161972045896
             },
             {
               "strike": 7770.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1438989419555664
+              "impliedVolatility": 0.14662260856628417
             },
             {
               "strike": 7775.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14148807739257813
+              "impliedVolatility": 0.14361665718078612
             },
             {
               "strike": 7780.0,
@@ -9542,22 +9542,22 @@
             {
               "strike": 7785.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.13868048828125001
+              "impliedVolatility": 0.14028264511108396
             },
             {
               "strike": 7790.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.13694100372314455
+              "impliedVolatility": 0.13779548736572267
             },
             {
               "strike": 7795.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1355829850769043
+              "impliedVolatility": 0.1365290205383301
             },
             {
               "strike": 7800.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.133797724609375
+              "impliedVolatility": 0.1358728991699219
             },
             {
               "strike": 7805.0,
@@ -9632,7 +9632,7 @@
             {
               "strike": 7875.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14624877197265623
+              "impliedVolatility": 0.14258669921875
             },
             {
               "strike": 7880.0,
@@ -10373,8 +10373,8 @@
             },
             {
               "strike": 600.0,
-              "openInterest": 9414.0,
-              "impliedVolatility": 0.500005
+              "openInterest": 0.0,
+              "impliedVolatility": 12.937501914062501
             },
             {
               "strike": 800.0,
@@ -11769,7 +11769,7 @@
             {
               "strike": 7310.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.387701435546875
+              "impliedVolatility": 0.36426416992187505
             },
             {
               "strike": 7315.0,
@@ -12124,12 +12124,12 @@
             {
               "strike": 7665.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12983047912597656
+              "impliedVolatility": 0.12787737365722657
             },
             {
               "strike": 7670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1279078909301758
+              "impliedVolatility": 0.12705340728759767
             },
             {
               "strike": 7675.0,
@@ -12144,12 +12144,12 @@
             {
               "strike": 7685.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1204616763305664
+              "impliedVolatility": 0.11914943359374999
             },
             {
               "strike": 7690.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11853908813476563
+              "impliedVolatility": 0.11615874084472656
             },
             {
               "strike": 7695.0,
@@ -12169,17 +12169,17 @@
             {
               "strike": 7710.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10682045532226564
+              "impliedVolatility": 0.10511148803710937
             },
             {
               "strike": 7715.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10315838256835935
+              "impliedVolatility": 0.10236493347167967
             },
             {
               "strike": 7720.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1000913966369629
+              "impliedVolatility": 0.09861130889892578
             },
             {
               "strike": 7725.0,
@@ -12194,12 +12194,12 @@
             {
               "strike": 7735.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09024957611083985
+              "impliedVolatility": 0.08769375450134279
             },
             {
               "strike": 7740.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08558043334960938
+              "impliedVolatility": 0.08434448379516604
             },
             {
               "strike": 7745.0,
@@ -12219,7 +12219,7 @@
             {
               "strike": 7760.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.06308920318603516
+              "impliedVolatility": 0.05852687088012695
             },
             {
               "strike": 7765.0,
@@ -12394,7 +12394,7 @@
             {
               "strike": 7935.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.41911896804809573
+              "impliedVolatility": 0.4302577726745606
             },
             {
               "strike": 7940.0,
@@ -12414,17 +12414,17 @@
             {
               "strike": 7955.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.4484918432617187
+              "impliedVolatility": 0.4600578897094727
             },
             {
               "strike": 7960.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.45573969558715827
+              "impliedVolatility": 0.4674125524902344
             },
             {
               "strike": 7965.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.46295703063964844
+              "impliedVolatility": 0.47472143936157224
             },
             {
               "strike": 7970.0,
@@ -12464,12 +12464,12 @@
             {
               "strike": 8005.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5157213955688477
+              "impliedVolatility": 0.5078784564208985
             },
             {
               "strike": 8010.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5265245101928712
+              "impliedVolatility": 0.539189178466797
             },
             {
               "strike": 8015.0,
@@ -12489,7 +12489,7 @@
             {
               "strike": 8030.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5540510903930665
+              "impliedVolatility": 0.5658002404785156
             },
             {
               "strike": 8035.0,
@@ -12504,7 +12504,7 @@
             {
               "strike": 8050.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5812114633178712
+              "impliedVolatility": 0.567265069580078
             },
             {
               "strike": 8060.0,
@@ -12539,7 +12539,7 @@
             {
               "strike": 8110.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6605258557128908
+              "impliedVolatility": 0.6735872485351564
             },
             {
               "strike": 8120.0,
@@ -12564,7 +12564,7 @@
             {
               "strike": 8150.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7118864260864258
+              "impliedVolatility": 0.7270229934692383
             },
             {
               "strike": 8160.0,
@@ -12574,7 +12574,7 @@
             {
               "strike": 8170.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.7371852453613281
+              "impliedVolatility": 0.7511011218261718
             },
             {
               "strike": 8175.0,
@@ -12599,7 +12599,7 @@
             {
               "strike": 8225.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8054218676757812
+              "impliedVolatility": 0.7952901330566406
             },
             {
               "strike": 8230.0,
@@ -12624,7 +12624,7 @@
             {
               "strike": 8275.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.8659681372070311
+              "impliedVolatility": 0.8813793600463866
             },
             {
               "strike": 8280.0,
@@ -12639,7 +12639,7 @@
             {
               "strike": 8300.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.81445498046875
+              "impliedVolatility": 0.9267280276489257
             },
             {
               "strike": 8310.0,
@@ -12649,12 +12649,12 @@
             {
               "strike": 8320.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9194038821411132
+              "impliedVolatility": 0.9212044012451173
             },
             {
               "strike": 8325.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9252937158203125
+              "impliedVolatility": 0.9413763186645507
             },
             {
               "strike": 8330.0,
@@ -12664,7 +12664,7 @@
             {
               "strike": 8340.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9428716650390624
+              "impliedVolatility": 0.9501652932739256
             },
             {
               "strike": 8350.0,
@@ -12689,12 +12689,12 @@
             {
               "strike": 8400.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.0121509353637697
+              "impliedVolatility": 1.0291796588134767
             },
             {
               "strike": 8410.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9974975836181641
+              "impliedVolatility": 1.0137378414916993
             },
             {
               "strike": 8425.0,
@@ -12704,7 +12704,7 @@
             {
               "strike": 8450.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.9219368157958985
+              "impliedVolatility": 0.9847413635253908
             },
             {
               "strike": 8500.0,
@@ -12714,12 +12714,12 @@
             {
               "strike": 8525.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.1519817791748046
+              "impliedVolatility": 1.1705058564758302
             },
             {
               "strike": 8550.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.0220385812377928
+              "impliedVolatility": 1.0894210568237304
             },
             {
               "strike": 8575.0,
@@ -12743,8 +12743,8 @@
             },
             {
               "strike": 8700.0,
-              "openInterest": 1.0,
-              "impliedVolatility": 2.9058560068511965
+              "openInterest": 0.0,
+              "impliedVolatility": 2.9716975170516964
             },
             {
               "strike": 8750.0,
@@ -12764,7 +12764,7 @@
             {
               "strike": 8850.0,
               "openInterest": 0.0,
-              "impliedVolatility": 1.4923121087646483
+              "impliedVolatility": 1.5142846551513671
             },
             {
               "strike": 8900.0,
@@ -12914,12 +12914,12 @@
             {
               "strike": 7250.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.541767888031006
+              "impliedVolatility": 0.5461471166992189
             },
             {
               "strike": 7300.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.5018360363769532
+              "impliedVolatility": 0.5060016441345214
             },
             {
               "strike": 7360.0,
@@ -13069,212 +13069,212 @@
             {
               "strike": 7615.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.19653360847473142
+              "impliedVolatility": 0.2004245607757568
             },
             {
               "strike": 7620.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.19749490257263183
+              "impliedVolatility": 0.19664804824829102
             },
             {
               "strike": 7625.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1834722156524658
+              "impliedVolatility": 0.18562368339538574
             },
             {
               "strike": 7630.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17844449493408204
+              "impliedVolatility": 0.18225915405273438
             },
             {
               "strike": 7635.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17633117378234867
+              "impliedVolatility": 0.17882596084594726
             },
             {
               "strike": 7640.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1720358676147461
+              "impliedVolatility": 0.17614044082641606
             },
             {
               "strike": 7645.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1789098833465576
+              "impliedVolatility": 0.17812406356811522
             },
             {
               "strike": 7650.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1653144382476807
+              "impliedVolatility": 0.1680991394042969
             },
             {
               "strike": 7655.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.16280439254760742
+              "impliedVolatility": 0.16436077346801758
             },
             {
               "strike": 7660.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.159012621383667
+              "impliedVolatility": 0.1609352095794678
             },
             {
               "strike": 7665.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1547630911254883
+              "impliedVolatility": 0.15779193046569825
             },
             {
               "strike": 7670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15155114814758303
+              "impliedVolatility": 0.15416037498474125
             },
             {
               "strike": 7675.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1482323947143555
+              "impliedVolatility": 0.15188683815002443
             },
             {
               "strike": 7680.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14550491344451905
+              "impliedVolatility": 0.14730161788940432
             },
             {
               "strike": 7685.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1419229485321045
+              "impliedVolatility": 0.14475342559814453
             },
             {
               "strike": 7690.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1392526871490479
+              "impliedVolatility": 0.14134312034606936
             },
             {
               "strike": 7695.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.13641839542388917
+              "impliedVolatility": 0.13813117736816405
             },
             {
               "strike": 7700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.13272962005615235
+              "impliedVolatility": 0.1350908940505982
             },
             {
               "strike": 7705.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12988388435363768
+              "impliedVolatility": 0.13220319709777834
             },
             {
               "strike": 7710.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12748827842712404
+              "impliedVolatility": 0.1291209525299072
             },
             {
               "strike": 7715.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12422293022155761
+              "impliedVolatility": 0.1264812084197998
             },
             {
               "strike": 7720.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12106439247131348
+              "impliedVolatility": 0.12329596805572511
             },
             {
               "strike": 7725.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11797833324432373
+              "impliedVolatility": 0.12018702087402343
             },
             {
               "strike": 7730.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11526229595184327
+              "impliedVolatility": 0.11776852699279786
             },
             {
               "strike": 7735.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11350373809814451
+              "impliedVolatility": 0.11536910640716554
             },
             {
               "strike": 7740.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11081058876037597
+              "impliedVolatility": 0.11297731513977052
             },
             {
               "strike": 7745.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10902914295196532
+              "impliedVolatility": 0.11057407989501952
             },
             {
               "strike": 7750.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10720573589324951
+              "impliedVolatility": 0.10844550010681153
             },
             {
               "strike": 7755.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10501230690002442
+              "impliedVolatility": 0.10594689838409423
             },
             {
               "strike": 7760.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10336437416076658
+              "impliedVolatility": 0.10431040962219237
             },
             {
               "strike": 7765.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10162488960266114
+              "impliedVolatility": 0.10289898574829101
             },
             {
               "strike": 7770.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09945434856414793
+              "impliedVolatility": 0.10075514732360841
             },
             {
               "strike": 7775.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09846635185241698
+              "impliedVolatility": 0.0994657925415039
             },
             {
               "strike": 7780.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09668872070312501
+              "impliedVolatility": 0.09806199798583985
             },
             {
               "strike": 7785.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09546040046691895
+              "impliedVolatility": 0.0961699270629883
             },
             {
               "strike": 7790.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09447621841430665
+              "impliedVolatility": 0.09484242568969728
             },
             {
               "strike": 7795.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09336996726989746
+              "impliedVolatility": 0.09414052841186524
             },
             {
               "strike": 7800.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09173729316711426
+              "impliedVolatility": 0.09254600090026854
             },
             {
               "strike": 7805.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09121087020874025
+              "impliedVolatility": 0.09163811203002928
             },
             {
               "strike": 7810.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08971552383422851
+              "impliedVolatility": 0.09063867134094239
             },
             {
               "strike": 7815.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08954767883300781
+              "impliedVolatility": 0.09004358451843261
             },
             {
               "strike": 7820.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08891444541931154
+              "impliedVolatility": 0.08944086837768556
             },
             {
               "strike": 7825.0,
@@ -13294,17 +13294,17 @@
             {
               "strike": 7840.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08667905517578126
+              "impliedVolatility": 0.08629758926391604
             },
             {
               "strike": 7845.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08631284790039065
+              "impliedVolatility": 0.0867400897216797
             },
             {
               "strike": 7850.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08585508880615236
+              "impliedVolatility": 0.08634336517333986
             },
             {
               "strike": 7855.0,
@@ -13324,12 +13324,12 @@
             {
               "strike": 7870.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08637388244628907
+              "impliedVolatility": 0.08713681427001954
             },
             {
               "strike": 7875.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0867400897216797
+              "impliedVolatility": 0.0875640560913086
             },
             {
               "strike": 7880.0,
@@ -13359,12 +13359,12 @@
             {
               "strike": 7905.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09070733520507812
+              "impliedVolatility": 0.09223319885253906
             },
             {
               "strike": 7910.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09308768249511719
+              "impliedVolatility": 0.09137871520996094
             },
             {
               "strike": 7915.0,
@@ -13671,7 +13671,7 @@
             {
               "strike": 6100.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.6796907031250001
+              "impliedVolatility": 0.648441015625
             },
             {
               "strike": 6200.0,
@@ -13731,7 +13731,7 @@
             {
               "strike": 6700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.46582565429687506
+              "impliedVolatility": 0.450200810546875
             },
             {
               "strike": 6725.0,
@@ -13846,12 +13846,12 @@
             {
               "strike": 7220.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.26233647827148443
+              "impliedVolatility": 0.25794199096679693
             },
             {
               "strike": 7225.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2600171655273438
+              "impliedVolatility": 0.2556226782226563
             },
             {
               "strike": 7230.0,
@@ -13876,7 +13876,7 @@
             {
               "strike": 7270.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.24280542358398435
+              "impliedVolatility": 0.2391433508300781
             },
             {
               "strike": 7275.0,
@@ -13931,7 +13931,7 @@
             {
               "strike": 7350.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2108233215332031
+              "impliedVolatility": 0.20801573242187496
             },
             {
               "strike": 7355.0,
@@ -14011,7 +14011,7 @@
             {
               "strike": 7430.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1780477703857422
+              "impliedVolatility": 0.17615569946289064
             },
             {
               "strike": 7435.0,
@@ -14066,7 +14066,7 @@
             {
               "strike": 7485.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15485464294433599
+              "impliedVolatility": 0.1562584375
             },
             {
               "strike": 7490.0,
@@ -14076,7 +14076,7 @@
             {
               "strike": 7495.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15100946655273442
+              "impliedVolatility": 0.15229119201660157
             },
             {
               "strike": 7500.0,
@@ -14086,7 +14086,7 @@
             {
               "strike": 7505.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1482323947143555
+              "impliedVolatility": 0.1469811865234375
             },
             {
               "strike": 7510.0,
@@ -14106,7 +14106,7 @@
             {
               "strike": 7525.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1408166973876953
+              "impliedVolatility": 0.13971807556152344
             },
             {
               "strike": 7530.0,
@@ -14141,7 +14141,7 @@
             {
               "strike": 7560.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12751116638183596
+              "impliedVolatility": 0.12671771728515624
             },
             {
               "strike": 7565.0,
@@ -14156,7 +14156,7 @@
             {
               "strike": 7575.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12243004043579103
+              "impliedVolatility": 0.1217434017944336
             },
             {
               "strike": 7580.0,
@@ -14166,7 +14166,7 @@
             {
               "strike": 7585.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11841701904296875
+              "impliedVolatility": 0.11777615631103515
             },
             {
               "strike": 7590.0,
@@ -14181,17 +14181,17 @@
             {
               "strike": 7600.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11275606491088866
+              "impliedVolatility": 0.1133053758239746
             },
             {
               "strike": 7605.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11173373626708984
+              "impliedVolatility": 0.11121494262695311
             },
             {
               "strike": 7610.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1100552862548828
+              "impliedVolatility": 0.10956700988769531
             },
             {
               "strike": 7615.0,
@@ -14201,32 +14201,32 @@
             {
               "strike": 7620.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1067746794128418
+              "impliedVolatility": 0.10633217895507813
             },
             {
               "strike": 7625.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10556924713134765
+              "impliedVolatility": 0.10473002212524413
             },
             {
               "strike": 7630.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10456217712402342
+              "impliedVolatility": 0.10378398666381836
             },
             {
               "strike": 7635.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10260907165527343
+              "impliedVolatility": 0.10186139846801759
             },
             {
               "strike": 7640.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10123579437255859
+              "impliedVolatility": 0.10053389709472656
             },
             {
               "strike": 7645.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10033553482055663
+              "impliedVolatility": 0.09967941345214844
             },
             {
               "strike": 7650.0,
@@ -14236,7 +14236,7 @@
             {
               "strike": 7655.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09722277297973633
+              "impliedVolatility": 0.09662768615722657
             },
             {
               "strike": 7660.0,
@@ -14251,7 +14251,7 @@
             {
               "strike": 7670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0919585433959961
+              "impliedVolatility": 0.09143974975585936
             },
             {
               "strike": 7675.0,
@@ -14261,112 +14261,112 @@
             {
               "strike": 7680.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08933405792236329
+              "impliedVolatility": 0.08841091041564941
             },
             {
               "strike": 7685.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08763271995544433
+              "impliedVolatility": 0.08719021949768069
             },
             {
               "strike": 7690.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08609922698974612
+              "impliedVolatility": 0.08526000198364261
             },
             {
               "strike": 7695.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08428344924926762
+              "impliedVolatility": 0.08348237083435062
             },
             {
               "strike": 7700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08297120651245118
+              "impliedVolatility": 0.08181155014038088
             },
             {
               "strike": 7705.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08095706649780274
+              "impliedVolatility": 0.08021702262878419
             },
             {
               "strike": 7710.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07936253898620607
+              "impliedVolatility": 0.07864538307189942
             },
             {
               "strike": 7715.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07776038215637207
+              "impliedVolatility": 0.0767266095352173
             },
             {
               "strike": 7720.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07612770805358887
+              "impliedVolatility": 0.0747887627029419
             },
             {
               "strike": 7725.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07409830940246584
+              "impliedVolatility": 0.07279369598388671
             },
             {
               "strike": 7730.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07262585098266602
+              "impliedVolatility": 0.07135175483703615
             },
             {
               "strike": 7735.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07006240005493164
+              "impliedVolatility": 0.06912399391174318
             },
             {
               "strike": 7740.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.06858231231689454
+              "impliedVolatility": 0.06734254810333253
             },
             {
               "strike": 7745.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0665681723022461
+              "impliedVolatility": 0.06533222274780273
             },
             {
               "strike": 7750.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0639742041015625
+              "impliedVolatility": 0.06273062522888184
             },
             {
               "strike": 7755.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0616701499938965
+              "impliedVolatility": 0.06009088111877442
             },
             {
               "strike": 7760.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.05895411270141601
+              "impliedVolatility": 0.05796993064880371
             },
             {
               "strike": 7765.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.056375403137207035
+              "impliedVolatility": 0.055002125854492184
             },
             {
               "strike": 7770.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.05351440879821778
+              "impliedVolatility": 0.05128664787292481
             },
             {
               "strike": 7775.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.048952076492309565
+              "impliedVolatility": 0.04640388420104981
             },
             {
               "strike": 7780.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.04358103645324707
+              "impliedVolatility": 0.03978926528930664
             },
             {
               "strike": 7785.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.03421986297607422
+              "impliedVolatility": 0.02506468109130859
             },
             {
               "strike": 7790.0,
@@ -14821,227 +14821,227 @@
             {
               "strike": 7575.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.21969621864318847
+              "impliedVolatility": 0.22130600479125978
             },
             {
               "strike": 7580.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.21203638313293455
+              "impliedVolatility": 0.21566793861389158
             },
             {
               "strike": 7585.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.20882444015502927
+              "impliedVolatility": 0.21201349517822266
             },
             {
               "strike": 7590.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.20517762603759765
+              "impliedVolatility": 0.21106745971679686
             },
             {
               "strike": 7595.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.20616943740844723
+              "impliedVolatility": 0.20539887626647949
             },
             {
               "strike": 7600.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.19072769729614258
+              "impliedVolatility": 0.19428295959472658
             },
             {
               "strike": 7605.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.19975318077087403
+              "impliedVolatility": 0.19899787826538085
             },
             {
               "strike": 7610.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.19179580184936523
+              "impliedVolatility": 0.19554942642211914
             },
             {
               "strike": 7620.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.18996476547241214
+              "impliedVolatility": 0.18923998023986818
             },
             {
               "strike": 7625.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17617095809936523
+              "impliedVolatility": 0.1787496676635742
             },
             {
               "strike": 7630.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17265384239196782
+              "impliedVolatility": 0.18271691314697264
             },
             {
               "strike": 7635.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.18042048835754396
+              "impliedVolatility": 0.18180902427673337
             },
             {
               "strike": 7640.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17734205844879153
+              "impliedVolatility": 0.178719150390625
             },
             {
               "strike": 7645.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17009802078247072
+              "impliedVolatility": 0.17283694602966312
             },
             {
               "strike": 7650.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.16183165447235104
+              "impliedVolatility": 0.1638801264190674
             },
             {
               "strike": 7655.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15799029273986817
+              "impliedVolatility": 0.16169814140319824
             },
             {
               "strike": 7660.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1564186531829834
+              "impliedVolatility": 0.15808184455871582
             },
             {
               "strike": 7665.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15829546546936038
+              "impliedVolatility": 0.1615226670837402
             },
             {
               "strike": 7670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.15544210044860843
+              "impliedVolatility": 0.1586273408126831
             },
             {
               "strike": 7675.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1477364890289307
+              "impliedVolatility": 0.14901058517456056
             },
             {
               "strike": 7680.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1450547836685181
+              "impliedVolatility": 0.14661497924804687
             },
             {
               "strike": 7685.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1471719194793701
+              "impliedVolatility": 0.1499222887039185
             },
             {
               "strike": 7690.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14417359741210936
+              "impliedVolatility": 0.14689344936370846
             },
             {
               "strike": 7695.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14135074966430666
+              "impliedVolatility": 0.14403626968383787
             },
             {
               "strike": 7700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.13395794029235839
+              "impliedVolatility": 0.13603311485290528
             },
             {
               "strike": 7705.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1320773133468628
+              "impliedVolatility": 0.13383205654144287
             },
             {
               "strike": 7710.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1279918134307861
+              "impliedVolatility": 0.130593410949707
             },
             {
               "strike": 7715.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12605396659851073
+              "impliedVolatility": 0.12806047729492187
             },
             {
               "strike": 7720.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12391775749206543
+              "impliedVolatility": 0.1256190954589844
             },
             {
               "strike": 7725.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12185784156799317
+              "impliedVolatility": 0.12326545078277588
             },
             {
               "strike": 7730.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1193020199584961
+              "impliedVolatility": 0.12069818519592285
             },
             {
               "strike": 7735.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11708188835144043
+              "impliedVolatility": 0.11874507972717285
             },
             {
               "strike": 7740.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11516692947387697
+              "impliedVolatility": 0.11710477630615235
             },
             {
               "strike": 7745.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11327867321014405
+              "impliedVolatility": 0.11493804992675781
             },
             {
               "strike": 7750.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.111951171836853
+              "impliedVolatility": 0.11306123764038087
             },
             {
               "strike": 7755.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11006291557312009
+              "impliedVolatility": 0.11117679603576658
             },
             {
               "strike": 7760.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10844168544769288
+              "impliedVolatility": 0.10955938056945802
             },
             {
               "strike": 7765.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10678993804931641
+              "impliedVolatility": 0.10820517658233643
             },
             {
               "strike": 7770.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.105389958152771
+              "impliedVolatility": 0.10624825645446778
             },
             {
               "strike": 7775.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10365428825378417
+              "impliedVolatility": 0.10453165985107421
             },
             {
               "strike": 7780.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10245648529052734
+              "impliedVolatility": 0.10304775745391843
             },
             {
               "strike": 7785.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10090010437011719
+              "impliedVolatility": 0.10180799324035644
             },
             {
               "strike": 7790.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09989303436279298
+              "impliedVolatility": 0.10051863845825196
             },
             {
               "strike": 7795.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09851975708007812
+              "impliedVolatility": 0.09948868049621581
             },
             {
               "strike": 7800.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09740587661743164
+              "impliedVolatility": 0.09807725662231445
             },
             {
               "strike": 7805.0,
@@ -15051,22 +15051,22 @@
             {
               "strike": 7810.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0953688486480713
+              "impliedVolatility": 0.09610126319885257
             },
             {
               "strike": 7815.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09447621841430665
+              "impliedVolatility": 0.09524677955627442
             },
             {
               "strike": 7820.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09397268341064452
+              "impliedVolatility": 0.09437703727722169
             },
             {
               "strike": 7825.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09307242385864259
+              "impliedVolatility": 0.09349966567993165
             },
             {
               "strike": 7830.0,
@@ -15081,7 +15081,7 @@
             {
               "strike": 7840.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0921035004425049
+              "impliedVolatility": 0.09157707748413085
             },
             {
               "strike": 7845.0,
@@ -15091,12 +15091,12 @@
             {
               "strike": 7850.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09049371429443359
+              "impliedVolatility": 0.0911193183898926
             },
             {
               "strike": 7855.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09028009338378906
+              "impliedVolatility": 0.09095910270690918
             },
             {
               "strike": 7860.0,
@@ -15111,7 +15111,7 @@
             {
               "strike": 7870.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09006647247314453
+              "impliedVolatility": 0.08960871337890625
             },
             {
               "strike": 7875.0,
@@ -15141,12 +15141,12 @@
             {
               "strike": 7900.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0903411279296875
+              "impliedVolatility": 0.0911345770263672
             },
             {
               "strike": 7905.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09009698974609376
+              "impliedVolatility": 0.09101250793457032
             },
             {
               "strike": 7910.0,
@@ -15638,7 +15638,7 @@
             {
               "strike": 7260.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2368240380859375
+              "impliedVolatility": 0.23462679443359374
             },
             {
               "strike": 7270.0,
@@ -15653,7 +15653,7 @@
             {
               "strike": 7280.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2299881689453125
+              "impliedVolatility": 0.22797402893066404
             },
             {
               "strike": 7290.0,
@@ -15678,7 +15678,7 @@
             {
               "strike": 7325.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2133867724609375
+              "impliedVolatility": 0.21167780517578122
             },
             {
               "strike": 7330.0,
@@ -15688,12 +15688,12 @@
             {
               "strike": 7340.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.20819883605957026
+              "impliedVolatility": 0.20655090332031245
             },
             {
               "strike": 7345.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.2059405578613281
+              "impliedVolatility": 0.20429262512207028
             },
             {
               "strike": 7350.0,
@@ -15708,7 +15708,7 @@
             {
               "strike": 7360.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.20050848327636717
+              "impliedVolatility": 0.19904365417480469
             },
             {
               "strike": 7365.0,
@@ -15723,7 +15723,7 @@
             {
               "strike": 7375.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1950153741455078
+              "impliedVolatility": 0.19361157958984376
             },
             {
               "strike": 7380.0,
@@ -15738,7 +15738,7 @@
             {
               "strike": 7390.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.18933916137695314
+              "impliedVolatility": 0.18799640136718748
             },
             {
               "strike": 7395.0,
@@ -15748,7 +15748,7 @@
             {
               "strike": 7400.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1859212268066406
+              "impliedVolatility": 0.1846395013427734
             },
             {
               "strike": 7405.0,
@@ -15758,7 +15758,7 @@
             {
               "strike": 7410.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.18241174041748048
+              "impliedVolatility": 0.1811910494995117
             },
             {
               "strike": 7415.0,
@@ -15788,7 +15788,7 @@
             {
               "strike": 7440.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.17133397033691405
+              "impliedVolatility": 0.17026586578369146
             },
             {
               "strike": 7445.0,
@@ -15798,7 +15798,7 @@
             {
               "strike": 7450.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1674582766723633
+              "impliedVolatility": 0.1664512066650391
             },
             {
               "strike": 7455.0,
@@ -15813,7 +15813,7 @@
             {
               "strike": 7465.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.16196516754150392
+              "impliedVolatility": 0.16104964935302735
             },
             {
               "strike": 7470.0,
@@ -15828,7 +15828,7 @@
             {
               "strike": 7480.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1570824038696289
+              "impliedVolatility": 0.1562584375
             },
             {
               "strike": 7485.0,
@@ -15853,7 +15853,7 @@
             {
               "strike": 7505.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14820187744140628
+              "impliedVolatility": 0.147469462890625
             },
             {
               "strike": 7510.0,
@@ -15868,12 +15868,12 @@
             {
               "strike": 7520.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.14243411285400392
+              "impliedVolatility": 0.1417627328491211
             },
             {
               "strike": 7525.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1404352314758301
+              "impliedVolatility": 0.14106083557128907
             },
             {
               "strike": 7530.0,
@@ -15898,7 +15898,7 @@
             {
               "strike": 7550.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.13221082641601564
+              "impliedVolatility": 0.1316615155029297
             },
             {
               "strike": 7555.0,
@@ -15908,47 +15908,47 @@
             {
               "strike": 7560.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1292201336669922
+              "impliedVolatility": 0.12821306365966795
             },
             {
               "strike": 7565.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12737383865356444
+              "impliedVolatility": 0.12690082092285154
             },
             {
               "strike": 7570.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12592426818847657
+              "impliedVolatility": 0.12500875
             },
             {
               "strike": 7575.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12484090499877928
+              "impliedVolatility": 0.12395590408325197
             },
             {
               "strike": 7580.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12278098907470703
+              "impliedVolatility": 0.1219265054321289
             },
             {
               "strike": 7585.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12149926361083985
+              "impliedVolatility": 0.12067529724121094
             },
             {
               "strike": 7590.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.12009546905517576
+              "impliedVolatility": 0.11931727859497071
             },
             {
               "strike": 7595.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11858486404418944
+              "impliedVolatility": 0.11783719085693359
             },
             {
               "strike": 7600.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11698270721435547
+              "impliedVolatility": 0.11626555130004884
             },
             {
               "strike": 7605.0,
@@ -15958,32 +15958,32 @@
             {
               "strike": 7610.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11415985946655274
+              "impliedVolatility": 0.11350373809814451
             },
             {
               "strike": 7615.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.11225252990722655
+              "impliedVolatility": 0.11288576332092284
             },
             {
               "strike": 7620.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1108792526245117
+              "impliedVolatility": 0.11147433944702148
             },
             {
               "strike": 7625.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1105130453491211
+              "impliedVolatility": 0.10994847579956055
             },
             {
               "strike": 7630.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10828528442382812
+              "impliedVolatility": 0.1077359735107422
             },
             {
               "strike": 7635.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.1075681285095215
+              "impliedVolatility": 0.10651528259277344
             },
             {
               "strike": 7640.0,
@@ -15993,157 +15993,157 @@
             {
               "strike": 7645.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10457743576049802
+              "impliedVolatility": 0.10360088302612303
             },
             {
               "strike": 7650.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10286846847534178
+              "impliedVolatility": 0.10239545074462889
             },
             {
               "strike": 7655.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.10146467391967773
+              "impliedVolatility": 0.10101454414367675
             },
             {
               "strike": 7660.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09989303436279298
+              "impliedVolatility": 0.09903092140197756
             },
             {
               "strike": 7665.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09858079162597656
+              "impliedVolatility": 0.09774919593811035
             },
             {
               "strike": 7670.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09707018661499026
+              "impliedVolatility": 0.09627673751831056
             },
             {
               "strike": 7675.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09576557319641116
+              "impliedVolatility": 0.09500264137268069
             },
             {
               "strike": 7680.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09388876091003417
+              "impliedVolatility": 0.09351492431640626
             },
             {
               "strike": 7685.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.09254600090026854
+              "impliedVolatility": 0.09183265964508057
             },
             {
               "strike": 7690.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0909819906616211
+              "impliedVolatility": 0.09029535202026368
             },
             {
               "strike": 7695.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08954004951477051
+              "impliedVolatility": 0.08853297950744629
             },
             {
               "strike": 7700.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0881820308685303
+              "impliedVolatility": 0.08720929279327395
             },
             {
               "strike": 7705.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08625562801361086
+              "impliedVolatility": 0.08562620925903322
             },
             {
               "strike": 7710.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.084706876411438
+              "impliedVolatility": 0.08409271629333498
             },
             {
               "strike": 7715.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08348237083435062
+              "impliedVolatility": 0.08258974060058595
             },
             {
               "strike": 7720.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.08196413650512696
+              "impliedVolatility": 0.08079303615570067
             },
             {
               "strike": 7725.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0801369147872925
+              "impliedVolatility": 0.07927861648559573
             },
             {
               "strike": 7730.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07856146057128907
+              "impliedVolatility": 0.07771460624694826
             },
             {
               "strike": 7735.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07664650169372561
+              "impliedVolatility": 0.07553262123107912
             },
             {
               "strike": 7740.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07465524963378907
+              "impliedVolatility": 0.07409830940246584
             },
             {
               "strike": 7745.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.0730988687133789
+              "impliedVolatility": 0.07199261756896971
             },
             {
               "strike": 7750.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.07139753074645996
+              "impliedVolatility": 0.07000899482727052
             },
             {
               "strike": 7755.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.06924606300354005
+              "impliedVolatility": 0.06812455322265626
             },
             {
               "strike": 7760.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.06715944446563722
+              "impliedVolatility": 0.06601886138916016
             },
             {
               "strike": 7765.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.06510334320068359
+              "impliedVolatility": 0.0636308847808838
             },
             {
               "strike": 7770.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.06211646511077881
+              "impliedVolatility": 0.06057915748596192
             },
             {
               "strike": 7775.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.05962930736541748
+              "impliedVolatility": 0.058000447921752935
             },
             {
               "strike": 7780.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.05627622200012207
+              "impliedVolatility": 0.05414001289367676
             },
             {
               "strike": 7785.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.052492080154418946
+              "impliedVolatility": 0.05047031082153321
             },
             {
               "strike": 7790.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.04792974784851074
+              "impliedVolatility": 0.04387857986450194
             },
             {
               "strike": 7795.0,
               "openInterest": 0.0,
-              "impliedVolatility": 0.04027754165649414
+              "impliedVolatility": 0.03321279296875
             },
             {
               "strike": 7800.0,
