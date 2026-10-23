@@ -4,7 +4,6 @@ import numpy as np
 import json
 import datetime
 
-# إعدادات
 SYMBOL = "GLD"
 OUTPUT_JSON = "options_data.json"
 OUTPUT_CSV = "mt4_gamma_levels.csv"
@@ -57,8 +56,14 @@ def fetch_data():
         with open(OUTPUT_JSON, 'w') as f:
             json.dump(data, f, indent=2)
             
-        # 2. تصدير ملف CSV (لميتاتريدر)
-        # حساب غاما المبسطة لتحديد المستويات
+        # 2. تصدير ملف CSV (لميتاتريدر) مع حساب معامل التحويل لـ GC=F
+        gc_ticker = yf.Ticker("GC=F")
+        gc_price = gc_ticker.fast_info.last_price
+        if not gc_price:
+            gc_price = gc_ticker.history(period='1d')['Close'].iloc[-1]
+            
+        ratio = gc_price / current_price if current_price else 1.0
+        
         df['net_gamma'] = (df['openInterest_call'] - df['openInterest_put']) * 100
         top_levels = df.reindex(df['net_gamma'].abs().sort_values(ascending=False).index).head(10)
         
@@ -68,9 +73,11 @@ def fetch_data():
                 strike = round(row['strike'], 2)
                 gamma = round(row['net_gamma'], 2)
                 lvl_type = "CALL" if gamma > 0 else "PUT"
-                f.write(f"{strike},{gamma},{lvl_type},{strike}\n")
+                # تحويل السعر ليطابق أسعار الذهب الآجل (حوالي 4000)
+                converted_strike = round(strike * ratio, 2) 
+                f.write(f"{converted_strike},{gamma},{lvl_type},{strike}\n")
                 
-        print("✅ Successfully generated JSON and CSV")
+        print(f"✅ Successfully generated JSON and CSV. Conversion Ratio: {ratio:.2f}")
     except Exception as e:
         print(f"❌ Error: {e}")
 
