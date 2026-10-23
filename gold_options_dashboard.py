@@ -450,25 +450,42 @@ def single_date_page(symbol):
     available_options = sync_options.get(base_sym, sync_options["GLD"])
     col_sync1, col_sync2, col_sync3 = st.columns([2, 1, 1])
     with col_sync1: instrument_choice = st.selectbox(f"اختر الأداة لمزامنة سعر {base_sym}:", available_options, index=0)
+    
     reference_price, sync_ratio = S, 1.0
+    
     if instrument_choice != available_options[0]:
         ticker_symbol = ticker_map.get(instrument_choice)
-        if ticker_symbol:
-            other_price = fetch_other_instrument_price(ticker_symbol)
-            if other_price:
-                sync_ratio, reference_price = get_conversion_ratio(S, other_price), other_price
-                with col_sync2: st.metric(label=f"سعر {instrument_choice.split(' ')[0]}", value=f"${reference_price:,.2f}")
-                with col_sync3: st.metric(label="معامل التحويل", value=f"{sync_ratio:.3f}x")
-                st.success(f"📌 مستوى صفر غاما المحول: **${convert_price(zero_gamma_level, sync_ratio):,.2f}**")
-                st.markdown("---")
-                st.markdown(f"#### 🎯 محاكي الحركة (ماذا لو تحرك {base_sym}؟)")
-                price_offset = st.slider(f"حاكي حركة سعر {base_sym} (بالدولار):", min_value=-20.0, max_value=20.0, value=0.0, step=0.5)
-                if price_offset != 0:
-                    sim_gld, sim_conv = S + price_offset, (S + price_offset) * sync_ratio
-                    col_sim1, col_sim2 = st.columns(2)
-                    with col_sim1: st.metric(label=f"سعر {base_sym} المحاكي", value=f"${sim_gld:.2f}", delta=f"{price_offset:+.2f}$")
-                    with col_sim2: st.metric(label=f"السعر المكافئ في {instrument_choice.split(' ')[0]}", value=f"${sim_conv:.2f}")
-            else: st.warning(f"تعذر جلب سعر {instrument_choice}.")
+        other_price = fetch_other_instrument_price(ticker_symbol) if ticker_symbol else None
+        
+        if other_price:
+            sync_ratio = get_conversion_ratio(S, other_price)
+            reference_price = other_price
+            with col_sync2:
+                st.metric(label=f"سعر {instrument_choice.split(' ')[0]}", value=f"${reference_price:,.2f}")
+            with col_sync3:
+                st.metric(label="معامل التحويل", value=f"{sync_ratio:.3f}x")
+        else:
+            st.warning(f"⚠️ تعذر جلب سعر {instrument_choice} تلقائياً من ياهو.")
+            manual_mt4_price = st.number_input("أدخل سعر شارت ميتاتريدر الحالي يدوياً (لضبط التحويل):", value=4050.0, step=10.0)
+            sync_ratio = get_conversion_ratio(S, manual_mt4_price)
+            reference_price = manual_mt4_price
+            st.info(f"تم ضبط معامل التحويل يدوياً على: {sync_ratio:.3f}x")
+            
+        converted_zero_gamma = convert_price(zero_gamma_level, sync_ratio)
+        st.success(f"📌 مستوى صفر غاما المحول: **${converted_zero_gamma:,.2f}**")
+        
+        st.markdown("---")
+        st.markdown(f"#### 🎯 محاكي الحركة (ماذا لو تحرك {base_sym}؟)")
+        price_offset = st.slider(f"حاكي حركة سعر {base_sym} (بالدولار):", min_value=-20.0, max_value=20.0, value=0.0, step=0.5)
+        
+        if price_offset != 0:
+            simulated_gld = S + price_offset
+            simulated_converted = simulated_gld * sync_ratio
+            col_sim1, col_sim2 = st.columns(2)
+            with col_sim1:
+                st.metric(label=f"سعر {base_sym} المحاكي", value=f"${simulated_gld:.2f}", delta=f"{price_offset:+.2f}$")
+            with col_sim2:
+                st.metric(label=f"السعر المكافئ في {instrument_choice.split(' ')[0]}", value=f"${simulated_converted:.2f}")
 
     csv_content = generate_mt4_csv(df_sorted, sync_ratio)
     st.download_button(label="📥 تحميل ملف CSV لميتاتريدر (إذا لم يتحدث تلقائياً)", data=csv_content, file_name="mt4_gamma_levels.csv", mime="text/csv")
