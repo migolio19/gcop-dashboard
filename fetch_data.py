@@ -8,12 +8,19 @@ SYMBOL = "GLD"
 OUTPUT_JSON = "options_data.json"
 OUTPUT_CSV = "mt4_gamma_levels.csv"
 
+# 🔴 ضع هنا السعر الذي يظهر في شارت ميتاتريدر الخاص بك (مثلاً 4000 أو 2400)
+# إذا تغير السعر لاحقاً بشكل كبير، يمكنك تعديله
+CURRENT_MT4_PRICE = 4000.0 
+
 def fetch_data():
     try:
         ticker = yf.Ticker(SYMBOL)
         hist = ticker.history(period='1d')
         if hist.empty: hist = ticker.history(period='5d')
-        current_price = float(hist['Close'].iloc[-1])
+        current_gld_price = float(hist['Close'].iloc[-1])
+
+        # حساب معامل التحويل بدقة (سعر شارتك مقسوماً على سعر GLD)
+        final_ratio = CURRENT_MT4_PRICE / current_gld_price
 
         all_exps = ticker.options
         if not all_exps:
@@ -25,7 +32,7 @@ def fetch_data():
         calls = chain.calls
         puts = chain.puts
 
-        # حساب قوة الغاما بناءً على حجم العقود المفتوحة (OI)
+        # حساب غاما حقيقية بناءً على حجم التداول
         calls['net_gamma'] = calls['openInterest'] * 100
         puts['net_gamma'] = puts['openInterest'] * -100
 
@@ -35,10 +42,9 @@ def fetch_data():
         df = pd.merge(df_calls, df_puts, on='strike', how='outer')
         df.fillna(0, inplace=True)
 
-        # دمج الغاما (كول + بوت)
         df['net_gamma'] = df['net_gamma'] + df['net_gamma_p']
         
-        # فلترة المستويات التي تحتوي على عقود فعلية (نتجاهل الأصفار)
+        # فلترة المستويات التي تحتوي على عقود حقيقية فقط
         df_filtered = df[(df['oi_c'] > 0) | (df['oi_p'] > 0)]
 
         exp_obj = datetime.datetime.strptime(exp_date, "%Y-%m-%d")
@@ -50,7 +56,7 @@ def fetch_data():
             "last_updated": datetime.datetime.now().isoformat(),
             "symbols": {
                 SYMBOL: {
-                    "current_price": current_price,
+                    "current_price": current_gld_price,
                     "expirations": {
                         exp_date: {
                             "T": float(T),
@@ -64,19 +70,7 @@ def fetch_data():
         with open(OUTPUT_JSON, 'w') as f:
             json.dump(data, f, indent=2)
 
-        # 2. حساب معامل التحويل ليتطابق مع شارت XAUUSD الخاص بك
-        gc = yf.Ticker("GC=F")
-        gc_hist = gc.history(period='1d')
-        gc_price = float(gc_hist['Close'].iloc[-1]) if not gc_hist.empty else 2350.0
-        
-        ratio = gc_price / current_price
-        
-        # 🔴 هام: إذا كان شارت ميتاتريدر الخاص بك يظهر 4000 (بينما السعر الحقيقي 2400)، 
-        # يمكنك تعديل هذا الرقم يدوياً ليتطابق (مثلاً 1.66). اتركه 1.0 ليتطابق مع الأسعار الحقيقية.
-        BROKER_ADJUSTMENT = 1.0 
-        final_ratio = ratio * BROKER_ADJUSTMENT
-
-        # أخذ أقوى 10 مستويات
+        # 2. توليد ملف CSV لميتاتريدر
         top_levels = df_filtered.reindex(df_filtered['net_gamma'].abs().sort_values(ascending=False).index).head(10)
 
         with open(OUTPUT_CSV, mode='w', newline='') as f:
@@ -85,10 +79,10 @@ def fetch_data():
                 strike = round(row['strike'], 2)
                 gamma = round(row['net_gamma'], 2)
                 lvl_type = "CALL" if gamma > 0 else "PUT"
-                converted_strike = round(strike * final_ratio, 2)
+                converted_strike = round(strike * final_ratio, 2) # التحويل للسعر الذي تراه في شارتك
                 f.write(f"{converted_strike},{gamma},{lvl_type},{strike}\n")
 
-        print(f"✅ Success. CSV Generated. Ratio: {final_ratio:.2f}")
+        print(f"✅ Success. Chart Price: {CURRENT_MT4_PRICE}, GLD Price: {current_gld_price}, Ratio: {final_ratio:.2f}")
     except Exception as e:
         print(f"❌ Error: {e}")
 
