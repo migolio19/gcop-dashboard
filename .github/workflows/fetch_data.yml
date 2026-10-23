@@ -28,4 +28,5 @@ jobs:
           git add options_data.json
           git add mt4_gamma_levels.csv
           git commit -m "Auto-update options data and MT4 CSV [skip ci]" || exit 0
+          git pull --rebase origin main
           git push
