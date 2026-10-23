@@ -10,68 +10,69 @@ OUTPUT_JSON = "options_data.json"
 OUTPUT_CSV = "mt4_gamma_levels.csv"
 
 def fetch_data():
-    ticker = yf.Ticker(SYMBOL)
-    current_price = ticker.fast_info.last_price
-    if not current_price:
-        current_price = ticker.history(period='1d')['Close'].iloc[-1]
+    try:
+        ticker = yf.Ticker(SYMBOL)
+        current_price = ticker.fast_info.last_price
+        if not current_price:
+            current_price = ticker.history(period='1d')['Close'].iloc[-1]
+            
+        all_exps = ticker.options
+        if not all_exps:
+            print("No expirations found")
+            return
+            
+        exp_date = all_exps[0]
+        chain = ticker.option_chain(exp_date)
+        calls = chain.calls
+        puts = chain.puts
         
-    all_exps = ticker.options
-    if not all_exps:
-        print("No expirations found")
-        return
+        exp_obj = datetime.datetime.strptime(exp_date, "%Y-%m-%d")
+        days_to_exp = max((exp_obj - datetime.datetime.now()).days, 1)
+        T = days_to_exp / 365.0
         
-    exp_date = all_exps[0]
-    chain = ticker.option_chain(exp_date)
-    calls = chain.calls
-    puts = chain.puts
-    
-    # حساب الوقت المتبقي
-    exp_obj = datetime.datetime.strptime(exp_date, "%Y-%m-%d")
-    days_to_exp = max((exp_obj - datetime.datetime.now()).days, 1)
-    T = days_to_exp / 365.0
-    
-    # دمج البيانات
-    df = pd.merge(calls[['strike', 'openInterest', 'impliedVolatility']],
-                  puts[['strike', 'openInterest', 'impliedVolatility']],
-                  on='strike', how='outer', suffixes=('_call', '_put'))
-    
-    df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
-               'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
-               
-    # حفظ في JSON
-    data = {
-        "last_updated": datetime.datetime.now().isoformat(),
-        "symbols": {
-            SYMBOL: {
-                "current_price": float(current_price),
-                "expirations": {
-                    exp_date: {
-                        "T": float(T),
-                        "calls": calls[['strike', 'openInterest', 'impliedVolatility']].fillna(0).to_dict('records'),
-                        "puts": puts[['strike', 'openInterest', 'impliedVolatility']].fillna(0).to_dict('records')
+        df = pd.merge(calls[['strike', 'openInterest', 'impliedVolatility']],
+                      puts[['strike', 'openInterest', 'impliedVolatility']],
+                      on='strike', how='outer', suffixes=('_call', '_put'))
+        
+        df.fillna({'openInterest_call': 0, 'openInterest_put': 0,
+                   'impliedVolatility_call': 0.001, 'impliedVolatility_put': 0.001}, inplace=True)
+                   
+        # 1. حفظ في JSON (لمنصة Streamlit)
+        data = {
+            "last_updated": datetime.datetime.now().isoformat(),
+            "symbols": {
+                SYMBOL: {
+                    "current_price": float(current_price),
+                    "expirations": {
+                        exp_date: {
+                            "T": float(T),
+                            "calls": calls[['strike', 'openInterest', 'impliedVolatility']].fillna(0).to_dict('records'),
+                            "puts": puts[['strike', 'openInterest', 'impliedVolatility']].fillna(0).to_dict('records')
+                        }
                     }
                 }
             }
         }
-    }
-    
-    with open(OUTPUT_JSON, 'w') as f:
-        json.dump(data, f, indent=2)
         
-    # ========================================================
-    # تصدير أقوى المستويات لملف CSV لميتاتريدر
-    # ========================================================
-    # حساب غاما المبسطة لتحديد المستويات الأقوى
-    df['net_gamma'] = (df['openInterest_call'] - df['openInterest_put']) * 100 # مبسطة
-    top_levels = df.reindex(df['net_gamma'].abs().sort_values(ascending=False).index).head(10)
-    
-    with open(OUTPUT_CSV, mode='w', newline='') as f:
-        f.write("Price,GammaValue,Type,OriginalGLD\n")
-        for _, row in top_levels.iterrows():
-            strike = round(row['strike'], 2)
-            gamma = round(row['net_gamma'], 2)
-            lvl_type = "CALL" if gamma > 0 else "PUT"
-            f.write(f"{strike},{gamma},{lvl_type},{strike}\n")
+        with open(OUTPUT_JSON, 'w') as f:
+            json.dump(data, f, indent=2)
+            
+        # 2. تصدير ملف CSV (لميتاتريدر)
+        # حساب غاما المبسطة لتحديد المستويات
+        df['net_gamma'] = (df['openInterest_call'] - df['openInterest_put']) * 100
+        top_levels = df.reindex(df['net_gamma'].abs().sort_values(ascending=False).index).head(10)
+        
+        with open(OUTPUT_CSV, mode='w', newline='') as f:
+            f.write("Price,GammaValue,Type,OriginalGLD\n")
+            for _, row in top_levels.iterrows():
+                strike = round(row['strike'], 2)
+                gamma = round(row['net_gamma'], 2)
+                lvl_type = "CALL" if gamma > 0 else "PUT"
+                f.write(f"{strike},{gamma},{lvl_type},{strike}\n")
+                
+        print("✅ Successfully generated JSON and CSV")
+    except Exception as e:
+        print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
     fetch_data()
