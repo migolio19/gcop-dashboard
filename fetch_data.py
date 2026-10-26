@@ -19,18 +19,36 @@ def fetch_data():
     try:
         ticker = yf.Ticker(SYMBOL)
         hist = ticker.history(period='1d')
-        if hist.empty: hist = ticker.history(period='5d')
+        if hist.empty: 
+            hist = ticker.history(period='5d')
+            
+        if hist.empty:
+            print("⚠️ لا توجد بيانات سعرية متاحة من ياهو. تم إلغاء التحديث.")
+            return
+
         current_price = float(hist['Close'].iloc[-1])
 
         all_exps = ticker.options
         if not all_exps:
-            print("No expirations found")
+            print("⚠️ لا توجد تواريخ انتهاء متاحة. تم إلغاء التحديث.")
             return
 
         exp_date = all_exps[0]
         chain = ticker.option_chain(exp_date)
         calls = chain.calls.copy()
         puts = chain.puts.copy()
+
+        # ========================================================
+        # ✅ صمام الأمان: التحقق من أن البيانات ليست فارغة أو أصفار
+        # ========================================================
+        if calls.empty or puts.empty:
+            print("⚠️ عقود الكول أو البوت فارغة. تم إلغاء التحديث للحفاظ على المستويات السابقة.")
+            return
+
+        if calls['openInterest'].sum() == 0 or puts['openInterest'].sum() == 0:
+            print("⚠️ حجم السيولة (Open Interest) صفر. السوق مغلق أو البيانات غير محدثة. تم إلغاء التحديث.")
+            return
+        # ========================================================
 
         exp_obj = datetime.datetime.strptime(exp_date, "%Y-%m-%d")
         days_to_exp = max((exp_obj - datetime.datetime.now()).days, 1)
@@ -41,7 +59,6 @@ def fetch_data():
         puts['gamma'] = [calculate_gamma(current_price, k, T, 0.05, iv if iv > 0 else 0.001) for k, iv in zip(puts['strike'], puts['impliedVolatility'])]
 
         # 2. حساب الـ GEX (القيمة المطلقة * حجم العقود * 100)
-        # TradingView غالباً يعتمد على هذا المقياس لإيجاد الجدران
         calls['gex'] = calls['gamma'] * calls['openInterest'] * 100
         puts['gex'] = puts['gamma'] * puts['openInterest'] * 100 * -1
 
@@ -74,28 +91,24 @@ def fetch_data():
         with open(OUTPUT_JSON, 'w') as f:
             json.dump(data, f, indent=2)
 
-        # 5. تصدير ملف CSV لميتاتريدر (أقوى 10 جدران بناءً على total_gex_wall)
+        # 5. تصدير ملف CSV لميتاتريدر (أقوى 10 جدران)
         top_levels = df.sort_values(by='total_gex_wall', ascending=False).head(10)
         
-        gc = yf.Ticker("GC=F")
-        gc_hist = gc.history(period='1d')
-        gc_price = float(gc_hist['Close'].iloc[-1]) if not gc_hist.empty else 2400.0
-        ratio = gc_price / current_price
-
         with open(OUTPUT_CSV, mode='w', newline='') as f:
+            # ✅ السطر الأول يحتوي على سعر GLD الحالي (لكي يحسب ميتاتريدر النسبة ديناميكياً)
+            f.write(f"Current_GLD_Price,{current_price}\n")
             f.write("Price,GammaValue,Type,OriginalGLD\n")
+            
             for _, row in top_levels.iterrows():
                 strike = round(row['strike'], 2)
-                # القوة تعتمد على مجموع الغاما
                 strength = round(row['total_gex_wall'], 2)
                 
-                # تحديد النوع بناءً على أيهما أقوى (الكول أم البوت)
                 lvl_type = "CALL" if row['gex_c'] > abs(row['gex_p']) else "PUT"
                 
-                converted_strike = round(strike * ratio, 2)
-                f.write(f"{converted_strike},{strength},{lvl_type},{strike}\n")
+                f.write(f"{strike},{strength},{lvl_type},{strike}\n")
 
-        print(f"✅ Success. CSV Generated. Ratio: {ratio:.2f}")
+        print(f"✅ Success. JSON and CSV Generated. Price: {current_price}")
+        
     except Exception as e:
         print(f"❌ Error: {e}")
 
