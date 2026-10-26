@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install yfinance pandas numpy requests
+        run: pip install yfinance pandas numpy requests scipy
       - name: Run fetch script
         run: python fetch_data.py
       - name: Commit and push changes
