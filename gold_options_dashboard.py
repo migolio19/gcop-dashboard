@@ -126,15 +126,19 @@ def get_conversion_ratio(price_gld, price_other):
 def convert_price(price_gld, ratio):
     return price_gld * ratio
 
-def generate_mt4_csv(df_sorted, sync_ratio=1.0):
+def generate_mt4_csv(df_sorted, current_gld_price):
+    # ✅ التعديل الجوهري: نرسل سعر GLD الحالي ونترك ميتاتريدر يحسب التحويل بنفسه
     top_levels = df_sorted.reindex(df_sorted['net_gamma'].abs().sort_values(ascending=False).index).head(10)
-    csv_content = "Price,GammaValue,Type,OriginalGLD\n"
+    
+    csv_content = f"Current_GLD_Price,{current_gld_price}\n"
+    csv_content += "Price,GammaValue,Type,OriginalGLD\n"
+    
     for _, row in top_levels.iterrows():
-        converted_strike = row['strike'] * sync_ratio
+        strike = row['strike'] # نرسل السعر الأصلي
         gamma_val = row['net_gamma']
-        original_gld = row['strike']
         lvl_type = "CALL" if gamma_val > 0 else "PUT"
-        csv_content += f"{round(converted_strike, 2)},{round(gamma_val, 2)},{lvl_type},{round(original_gld, 2)}\n"
+        csv_content += f"{strike},{gamma_val},{lvl_type},{strike}\n"
+        
     return csv_content
 
 def calculate_ai_prediction(S, zero_gamma, gex_flow, iv_skew, vanna_net, charm_net):
@@ -487,8 +491,9 @@ def single_date_page(symbol):
             with col_sim2:
                 st.metric(label=f"السعر المكافئ في {instrument_choice.split(' ')[0]}", value=f"${simulated_converted:.2f}")
 
-    csv_content = generate_mt4_csv(df_sorted, sync_ratio)
-    st.download_button(label="📥 تحميل ملف CSV لميتاتريدر (إذا لم يتحدث تلقائياً)", data=csv_content, file_name="mt4_gamma_levels.csv", mime="text/csv")
+    # ✅ التعديل: نرسل السعر الأصلي S وليس السعر المحول
+    csv_content = generate_mt4_csv(df_sorted, S)
+    st.download_button(label="📥 تحميل ملف CSV لميتاتريدر (به تحديث النسبة اللحظية)", data=csv_content, file_name="mt4_gamma_levels.csv", mime="text/csv")
 
     st.divider()
     fig_combined = create_combined_chart(zero_gamma_level, S - zero_gamma_level, setup_signal, gex_flow, zones, S, expiration_date, settings)
