@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-04T21:00:27.747509",
+  "last_updated": "2026-11-04T21:05:26.297011",
   "symbols": {
     "GLD": {
       "current_price": 372.4599914550781,
@@ -100,12 +100,12 @@
             {
               "strike": 363.0,
               "openInterest": 1143,
-              "impliedVolatility": 0.3086006640625
+              "impliedVolatility": 0.282233740234375
             },
             {
               "strike": 364.0,
               "openInterest": 730,
-              "impliedVolatility": 0.36426416992187505
+              "impliedVolatility": 1.0000000000000003e-05
             },
             {
               "strike": 365.0,
@@ -150,7 +150,7 @@
             {
               "strike": 373.0,
               "openInterest": 443,
-              "impliedVolatility": 0.026376923828125
+              "impliedVolatility": 0.024423818359375002
             },
             {
               "strike": 374.0,
@@ -702,17 +702,17 @@
             {
               "strike": 372.0,
               "openInterest": 33,
-              "impliedVolatility": 0.0512790185546875
+              "impliedVolatility": 0.05689419677734375
             },
             {
               "strike": 373.0,
               "openInterest": 44,
-              "impliedVolatility": 0.09351492431640626
+              "impliedVolatility": 0.0922942333984375
             },
             {
               "strike": 374.0,
               "openInterest": 17,
-              "impliedVolatility": 0.11182528808593749
+              "impliedVolatility": 0.1694418994140625
             },
             {
               "strike": 375.0,
@@ -837,7 +837,7 @@
             {
               "strike": 414.0,
               "openInterest": 0,
-              "impliedVolatility": 1.1826212744140623
+              "impliedVolatility": 1.1953165234375
             },
             {
               "strike": 415.0,
